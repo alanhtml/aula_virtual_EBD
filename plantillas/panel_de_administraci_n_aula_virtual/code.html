@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Dashboard - Escuela Bíblica Filadelfia</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Libre+Caslon+Text:wght@100..900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#e9e960",
+                        "glass-border": "rgba(255, 255, 255, 0.12)",
+                        "primary-fixed-dim": "#d7baff",
+                        "surface-container": "#201f1f",
+                        "surface-container-highest": "#353534",
+                        "inverse-surface": "#e5e2e1",
+                        "secondary": "#fff9ef",
+                        "inverse-primary": "#714aaa",
+                        "secondary-fixed-dim": "#e9c400",
+                        "surface-variant": "#353534",
+                        "primary": "#d7baff",
+                        "on-tertiary-container": "#3e3e00",
+                        "on-primary-fixed-variant": "#593090",
+                        "on-tertiary-fixed": "#1d1d00",
+                        "background": "#131313",
+                        "surface-bright": "#3a3939",
+                        "on-tertiary": "#323200",
+                        "outline-variant": "#4a4451",
+                        "surface": "#131313",
+                        "tertiary-container": "#acac28",
+                        "primary-container": "#bd93f9",
+                        "on-tertiary-fixed-variant": "#494900",
+                        "tertiary-fixed-dim": "#cccc47",
+                        "secondary-fixed": "#ffe16d",
+                        "void-black": "#050505",
+                        "on-surface": "#e5e2e1",
+                        "on-primary-container": "#4e2484",
+                        "error-container": "#93000a",
+                        "inverse-on-surface": "#313030",
+                        "on-secondary-container": "#725f00",
+                        "secondary-container": "#ffdb3c",
+                        "on-surface-variant": "#ccc3d3",
+                        "on-secondary-fixed-variant": "#544600",
+                        "on-secondary": "#3a3000",
+                        "glow-purple": "rgba(189, 147, 249, 0.4)",
+                        "tertiary": "#cccc47",
+                        "glass-fill": "rgba(255, 255, 255, 0.03)",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary-fixed": "#221b00",
+                        "on-primary": "#411478",
+                        "on-error": "#690005",
+                        "primary-fixed": "#eddcff",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-container-lowest": "#0e0e0e",
+                        "outline": "#968e9c",
+                        "error": "#ffb4ab",
+                        "surface-container-low": "#1c1b1b",
+                        "surface-dim": "#131313",
+                        "glow-gold": "rgba(255, 215, 0, 0.3)",
+                        "on-background": "#e5e2e1",
+                        "on-primary-fixed": "#290055",
+                        "surface-tint": "#d7baff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "64px",
+                        "section-gap": "80px",
+                        "glass-padding": "32px",
+                        "container-max": "1200px",
+                        "margin-mobile": "20px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-xl": ["Libre Caslon Text"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "headline-lg-mobile": ["Libre Caslon Text"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-xl": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "headline-lg": ["40px", { "lineHeight": "48px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "headline-md": ["28px", { "lineHeight": "36px", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.08em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #050505;
+            color: #e5e2e1;
+            overflow-x: hidden;
+        }
+        .bg-ambient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background: radial-gradient(circle at 20% 30%, rgba(215, 186, 255, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 70%, rgba(233, 196, 0, 0.1) 0%, transparent 50%);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-image: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 100%) 1;
+        }
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 30%);
+            pointer-events: none;
+        }
+        .glass-input {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-input:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(189, 147, 249, 0.4);
+        }
+        .glass-btn-primary {
+            background: rgba(113, 74, 170, 0.4);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .glass-btn-secondary {
+            background: transparent;
+            border: 1px solid #ffe16d;
+            transition: box-shadow 0.3s ease;
+        }
+        .glass-btn-secondary:hover {
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+    </style>
+</head>
+<body class="font-body-md text-body-md antialiased min-h-screen flex">
+<div class="bg-ambient"></div>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full flex flex-col h-screen w-64 border-r border-glass-border shadow-[0_0_20px_rgba(189,147,249,0.1)] bg-glass-fill backdrop-blur-[20px] z-50 md:flex hidden">
+<div class="p-6 flex flex-col items-center border-b border-glass-border">
+<img alt="School Logo" class="w-24 h-24 mb-4 object-contain filter drop-shadow-[0_0_10px_rgba(215,186,255,0.3)]" src="https://lh3.googleusercontent.com/aida/AEtjO1VxWfhRcX0f8tHczViCawssZhf2iQ0tPZJan9QDPO5szef6RPsX2p6f_AiavJD6K3i7NTExoqH5QI_yCvjfn95wQKVcc1gEHeeke6Q8ix_ZnB5nRCNM_kQl_EPjCuUcDC-De-QJVHHIzGsFR8VG3TmsZF-wwztCFbmjR4NLFbTTiPsYwgfA9c1LVafcuLAluROGqI-lVelCu0EEa5r6L_aooLLKCwH9L3iccpanKjtVdtYH5nxBhGlQeA"/>
+<h1 class="font-headline-md text-headline-md font-bold text-primary text-center">Filadelfia</h1>
+<p class="font-label-md text-label-md text-on-surface-variant text-center mt-1">Biblical School</p>
+</div>
+<div class="p-4">
+<button class="w-full py-3 px-4 rounded-lg glass-btn-primary text-primary-fixed font-label-md text-label-md flex items-center justify-center gap-2 hover:bg-opacity-60 transition-all duration-300">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
+                New Term
+            </button>
+</div>
+<nav class="flex-1 overflow-y-auto py-4">
+<ul class="flex flex-col space-y-1">
+<!-- Modules 101-501 (Inactive) -->
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-on-surface-variant font-medium hover:bg-glass-fill hover:text-primary transition-all duration-300 scale-95 active:scale-90 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+<span>Modules 101-501</span>
+</a>
+</li>
+<!-- Student Lists (Active/Dashboard context) -->
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-primary font-bold border-r-2 border-primary-fixed bg-primary/10 hover:bg-glass-fill hover:text-primary transition-all duration-300 scale-95 active:scale-90 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">group</span>
+<span>Student Lists</span>
+</a>
+</li>
+<!-- Grade Management -->
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-on-surface-variant font-medium hover:bg-glass-fill hover:text-primary transition-all duration-300 scale-95 active:scale-90 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span>Grade Management</span>
+</a>
+</li>
+<!-- Task Oversight -->
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-on-surface-variant font-medium hover:bg-glass-fill hover:text-primary transition-all duration-300 scale-95 active:scale-90 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">assignment_turned_in</span>
+<span>Task Oversight</span>
+</a>
+</li>
+<!-- Directorial Panel -->
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-on-surface-variant font-medium hover:bg-glass-fill hover:text-primary transition-all duration-300 scale-95 active:scale-90 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">admin_panel_settings</span>
+<span>Directorial Panel</span>
+</a>
+</li>
+<!-- Secretary Hub -->
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-on-surface-variant font-medium hover:bg-glass-fill hover:text-primary transition-all duration-300 scale-95 active:scale-90 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">work</span>
+<span>Secretary Hub</span>
+</a>
+</li>
+<!-- Classroom Settings -->
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-on-surface-variant font-medium hover:bg-glass-fill hover:text-primary transition-all duration-300 scale-95 active:scale-90 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Classroom Settings</span>
+</a>
+</li>
+<!-- Archives -->
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-on-surface-variant font-medium hover:bg-glass-fill hover:text-primary transition-all duration-300 scale-95 active:scale-90 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">history</span>
+<span>Archives</span>
+</a>
+</li>
+<!-- System Help -->
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-on-surface-variant font-medium hover:bg-glass-fill hover:text-primary transition-all duration-300 scale-95 active:scale-90 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">help</span>
+<span>System Help</span>
+</a>
+</li>
+</ul>
+</nav>
+<div class="mt-auto border-t border-glass-border p-4">
+<a class="flex items-center gap-4 px-4 py-2 text-on-surface-variant font-medium hover:bg-glass-fill hover:text-error transition-all duration-300 scale-95 active:scale-90 font-label-md text-label-md rounded-md" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span>Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col md:ml-64 relative min-h-screen">
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 left-0 md:left-64 flex justify-between items-center px-gutter z-40 bg-glass-fill backdrop-blur-[20px] w-full md:w-[calc(100%-16rem)] h-16 border-b border-glass-border shadow-sm">
+<div class="flex items-center gap-4">
+<button class="md:hidden text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<span class="font-headline-md text-headline-md font-semibold text-primary hidden md:block tracking-tight">Escuela Bíblica Filadelfia</span>
+</div>
+<nav class="hidden md:flex items-center gap-8 h-full">
+<a class="h-full flex items-center text-primary border-b-2 border-primary pb-1 font-label-md text-label-md px-2" href="#">Dashboard</a>
+<a class="h-full flex items-center text-on-surface-variant hover:text-primary transition-colors duration-200 hover:glow-purple font-label-md text-label-md px-2" href="#">Reports</a>
+<a class="h-full flex items-center text-on-surface-variant hover:text-primary transition-colors duration-200 hover:glow-purple font-label-md text-label-md px-2" href="#">Analytics</a>
+</nav>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+<input class="glass-input rounded-full py-1.5 pl-9 pr-4 text-sm text-on-surface focus:glow-purple w-48 transition-all duration-300 focus:w-64 placeholder-on-surface-variant" placeholder="Search..." type="text"/>
+</div>
+<button class="text-secondary-fixed hover:text-primary transition-colors duration-200 hover:glow-purple p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-secondary-fixed hover:text-primary transition-colors duration-200 hover:glow-purple p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">dark_mode</span>
+</button>
+<button class="text-secondary-fixed hover:text-primary transition-colors duration-200 hover:glow-purple p-1 rounded-full flex items-center justify-center">
+<img class="w-8 h-8 rounded-full object-cover border border-glass-border" data-alt="A highly detailed close-up portrait of a professional academic administrator in their 40s. They are wearing sophisticated dark smart-casual attire. The lighting is soft and cinematic, highlighting a calm, authoritative expression. The background is a deeply blurred, dimly lit office interior, aligning with a premium dark-mode aesthetic with subtle purple ambient light." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCy4seH82_Os0rUp92sxExEwb1uyba3rSA_EIIGW2-9BAYVjqBIg-A3XZ59KN0-t3hUcCJm4eWGvwqxY57IX9K9J5KW7p0OjZlkyEyeV-iBZ15Ts44GZjJlTzAL1EWfvqV5ovKeIUISKHulXj3tg1XG0nzo3_WGmktRNu4L6SM0jmsIOzDrPWFNrKlvRp2hDMlQPFh11KBv5XiO5beOEnAiA-j1uiEFI208z-77Dw2wfNBX5fiE9uU"/>
+</button>
+</div>
+</header>
+<!-- Main Dashboard Canvas -->
+<main class="flex-1 p-margin-mobile md:p-margin-desktop mt-16 max-w-container-max mx-auto w-full flex flex-col gap-section-gap pb-24">
+<!-- Welcome Section -->
+<section class="flex flex-col gap-2 mt-8">
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Panel de Control General</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Resumen del rendimiento y actividad de la escuela.</p>
+</section>
+<!-- Stats Bar (Bento style) -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Stat 1 -->
+<div class="glass-card rounded-xl p-glass-padding relative overflow-hidden group">
+<div class="absolute -right-6 -top-6 w-32 h-32 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all duration-500"></div>
+<div class="flex items-start justify-between relative z-10">
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider">Total Estudiantes</p>
+<h3 class="font-headline-xl text-headline-xl text-primary-fixed">1,248</h3>
+</div>
+<div class="p-3 bg-glass-fill rounded-lg border border-glass-border">
+<span class="material-symbols-outlined text-primary text-3xl">school</span>
+</div>
+</div>
+<div class="mt-4 flex items-center gap-2 text-sm text-secondary-fixed">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+<span>+12% este trimestre</span>
+</div>
+</div>
+<!-- Stat 2 -->
+<div class="glass-card rounded-xl p-glass-padding relative overflow-hidden group">
+<div class="absolute -right-6 -top-6 w-32 h-32 bg-secondary-fixed/10 rounded-full blur-2xl group-hover:bg-secondary-fixed/20 transition-all duration-500"></div>
+<div class="flex items-start justify-between relative z-10">
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider">Módulos Activos</p>
+<h3 class="font-headline-xl text-headline-xl text-secondary-fixed">24</h3>
+</div>
+<div class="p-3 bg-glass-fill rounded-lg border border-glass-border">
+<span class="material-symbols-outlined text-secondary-fixed text-3xl">library_books</span>
+</div>
+</div>
+<div class="mt-4 flex items-center gap-2 text-sm text-on-surface-variant">
+<span>Niveles 101 a 501 en curso</span>
+</div>
+</div>
+<!-- Stat 3 -->
+<div class="glass-card rounded-xl p-glass-padding relative overflow-hidden group">
+<div class="absolute -right-6 -top-6 w-32 h-32 bg-primary-container/10 rounded-full blur-2xl group-hover:bg-primary-container/20 transition-all duration-500"></div>
+<div class="flex items-start justify-between relative z-10">
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider">Promedio General</p>
+<h3 class="font-headline-xl text-headline-xl text-primary-fixed">8.7</h3>
+</div>
+<div class="p-3 bg-glass-fill rounded-lg border border-glass-border">
+<span class="material-symbols-outlined text-primary text-3xl">grade</span>
+</div>
+</div>
+<div class="mt-4 flex items-center gap-2 text-sm text-secondary-fixed">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+<span>+0.3 vs periodo anterior</span>
+</div>
+</div>
+</section>
+<!-- Complex Layout Grid: Activity Table & Quick Actions -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Recent Student Activity (Spans 2 columns on large screens) -->
+<div class="lg:col-span-2 glass-card rounded-xl p-glass-padding flex flex-col h-full">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-md text-headline-md text-on-surface">Actividad Reciente</h3>
+<button class="text-primary hover:text-primary-fixed transition-colors text-sm font-medium flex items-center gap-1">
+                            Ver todos <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-glass-border">
+<th class="py-3 px-4 font-label-sm text-label-sm text-on-surface-variant uppercase">Estudiante</th>
+<th class="py-3 px-4 font-label-sm text-label-sm text-on-surface-variant uppercase">Módulo Actual</th>
+<th class="py-3 px-4 font-label-sm text-label-sm text-on-surface-variant uppercase">Estado</th>
+<th class="py-3 px-4 font-label-sm text-label-sm text-on-surface-variant uppercase text-right">Acción</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-glass-border/50 hover:bg-glass-fill transition-colors group">
+<td class="py-4 px-4 flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs border border-primary/30">
+                                            MR
+                                        </div>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-primary transition-colors">María Rodríguez</span>
+</td>
+<td class="py-4 px-4 font-body-md text-body-md text-on-surface-variant">Módulo 101</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary-fixed/10 border border-secondary-fixed/20 text-secondary-fixed text-xs font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed animate-pulse"></span>
+                                            En Curso
+                                        </span>
+</td>
+<td class="py-4 px-4 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="border-b border-glass-border/50 hover:bg-glass-fill transition-colors group">
+<td class="py-4 px-4 flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs border border-primary/30">
+                                            JG
+                                        </div>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-primary transition-colors">Juan Gómez</span>
+</td>
+<td class="py-4 px-4 font-body-md text-body-md text-on-surface-variant">Módulo 202</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                                            Calificado
+                                        </span>
+</td>
+<td class="py-4 px-4 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="border-b border-glass-border/50 hover:bg-glass-fill transition-colors group">
+<td class="py-4 px-4 flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs border border-primary/30">
+                                            AL
+                                        </div>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-primary transition-colors">Ana López</span>
+</td>
+<td class="py-4 px-4 font-body-md text-body-md text-on-surface-variant">Módulo 501</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-tertiary-fixed/10 border border-tertiary-fixed/20 text-tertiary-fixed text-xs font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-fixed"></span>
+                                            Pendiente
+                                        </span>
+</td>
+<td class="py-4 px-4 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Quick Access Cards -->
+<div class="flex flex-col gap-6">
+<!-- Manage Modules Card -->
+<div class="glass-card rounded-xl p-glass-padding flex flex-col justify-between h-full group hover:shadow-[0_0_30px_rgba(189,143,249,0.15)] transition-all duration-300 cursor-pointer relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+<div class="relative z-10">
+<div class="w-12 h-12 rounded-lg bg-glass-fill border border-glass-border flex items-center justify-center mb-4 group-hover:border-primary/50 transition-colors">
+<span class="material-symbols-outlined text-primary text-2xl">auto_stories</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Gestionar Módulos</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6 text-sm">Administra el contenido, asigna profesores y revisa el progreso de los módulos 101 a 501.</p>
+</div>
+<div class="relative z-10 flex items-center text-primary font-medium text-sm">
+                            Acceder <span class="material-symbols-outlined ml-1 text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</div>
+<!-- Grade Upload Card -->
+<div class="glass-card rounded-xl p-glass-padding flex flex-col justify-between h-full group hover:shadow-[0_0_30px_rgba(255,215,0,0.1)] transition-all duration-300 cursor-pointer relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-secondary-fixed/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+<div class="relative z-10">
+<div class="w-12 h-12 rounded-lg bg-glass-fill border border-glass-border flex items-center justify-center mb-4 group-hover:border-secondary-fixed/50 transition-colors">
+<span class="material-symbols-outlined text-secondary-fixed text-2xl">upload_file</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Carga de Calificaciones</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6 text-sm">Sube las notas finales del periodo actual para los estudiantes evaluados.</p>
+</div>
+<div class="relative z-10 flex items-center text-secondary-fixed font-medium text-sm">
+                            Iniciar carga <span class="material-symbols-outlined ml-1 text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+</div>
+</body></html>

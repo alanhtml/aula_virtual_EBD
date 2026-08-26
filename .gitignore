@@ -1,0 +1,36 @@
+# Ide files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Packages & Dependencies
+node_modules/
+backend-laravel/vendor/
+frontend-aula/node_modules/
+app-aula/node_modules/
+
+# Environment files
+.env
+.env.production
+backend-laravel/.env
+frontend-aula/.env.local
+
+# Build outputs
+dist/
+build/
+backend-laravel/public/storage
+backend-laravel/storage/*.key
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+backend-laravel/storage/logs/*.log
+
+# OS files
+.DS_Store
+Thumbs.db
