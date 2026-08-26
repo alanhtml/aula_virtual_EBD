@@ -70,13 +70,13 @@ class _StudentTareasScreenState extends State<StudentTareasScreen> {
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: tareaProvider.tareas.length,
-                  itemBuilder: (context, index) {
-                    final tarea = tareaProvider.tareas[index];
-                    return Card(
-                      margin: const EdgeInsets.bottom(12),
-                      child: ListTile(
+                    itemBuilder: (context, index) {
+                      final tarea = tareaProvider.tareas[index];
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: ListTile(
                         title: Text(tarea.titulo, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text(tarea.descripcion ?? "Sin descripción"),
+                        subtitle: Text(tarea.contenido ?? "Sin descripción"),
                         trailing: ElevatedButton(
                           onPressed: () => _showEntregaDialog(tarea),
                           child: const Text("Entregar"),

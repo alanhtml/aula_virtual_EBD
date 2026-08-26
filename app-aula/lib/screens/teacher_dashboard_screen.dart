@@ -3,6 +3,10 @@ import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../providers/curso_provider.dart';
 import 'asistencia_screen.dart';
+import 'teacher_tareas_screen.dart';
+import 'calificacion_final_screen.dart';
+import 'materiales_screen.dart';
+import 'foro_screen.dart';
 
 class TeacherDashboard extends StatefulWidget {
   const TeacherDashboard({super.key});
@@ -116,8 +120,29 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                 Expanded(
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueGrey,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => MaterialesScreen(curso: curso),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.library_books, size: 18),
+                    label: const Text("Material", style: TextStyle(fontSize: 12)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF059669),
                       foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     onPressed: () {
                       Navigator.push(
@@ -127,8 +152,108 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                         ),
                       );
                     },
-                    icon: const Icon(Icons.how_to_reg),
-                    label: const Text("Tomar Asistencia"),
+                    icon: const Icon(Icons.how_to_reg, size: 18),
+                    label: const Text("Asistencia", style: TextStyle(fontSize: 12)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueGrey,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => MaterialesScreen(curso: curso),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.library_books, size: 18),
+                    label: const Text("Material", style: TextStyle(fontSize: 12)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF10B981),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => TeacherTareasScreen(curso: curso),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.assignment, size: 18),
+                    label: const Text("Tareas", style: TextStyle(fontSize: 12)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueGrey,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => MaterialesScreen(curso: curso),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.library_books, size: 18),
+                    label: const Text("Material", style: TextStyle(fontSize: 12)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurpleAccent,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ForoScreen(curso: curso),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.forum, size: 18),
+                    label: const Text("Foro", style: TextStyle(fontSize: 12)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF34D399),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CalificacionFinalScreen(curso: curso),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.grade, size: 18),
+                    label: const Text("Cerrar", style: TextStyle(fontSize: 12)),
                   ),
                 ),
               ],

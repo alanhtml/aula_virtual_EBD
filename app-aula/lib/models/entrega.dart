@@ -1,3 +1,5 @@
+import 'user.dart';
+
 class Entrega {
   final int? id;
   final int tareaId;
@@ -7,6 +9,7 @@ class Entrega {
   final double? calificacion;
   final String? comentarioProfesor;
   final String? fechaEntrega;
+  final User? user;
 
   Entrega({
     this.id,
@@ -17,6 +20,7 @@ class Entrega {
     this.calificacion,
     this.comentarioProfesor,
     this.fechaEntrega,
+    this.user,
   });
 
   factory Entrega.fromJson(Map<String, dynamic> json) {
@@ -29,6 +33,7 @@ class Entrega {
       calificacion: json['calificacion'] != null ? double.parse(json['calificacion'].toString()) : null,
       comentarioProfesor: json['comentario_profesor'],
       fechaEntrega: json['fecha_entrega'],
+      user: json['user'] != null ? User.fromJson(json['user']) : null,
     );
   }
 

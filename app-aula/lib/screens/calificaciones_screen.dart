@@ -23,7 +23,7 @@ class CalificacionesScreen extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final entrega = tareaProvider.calificaciones[index];
                       return Card(
-                        margin: const EdgeInsets.bottom(12),
+                        margin: const EdgeInsets.only(bottom: 12),
                         child: ListTile(
                           leading: const Icon(Icons.assignment_turned_in, color: Color(0xFF4F46E5)),
                           title: Text("Tarea #${entrega.tareaId}"),
@@ -31,7 +31,7 @@ class CalificacionesScreen extends StatelessWidget {
                           trailing: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF4F46E5).withOpacity(0.1),
+                              color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(

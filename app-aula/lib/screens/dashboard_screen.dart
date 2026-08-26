@@ -4,6 +4,9 @@ import '../providers/user_provider.dart';
 import '../providers/curso_provider.dart';
 import 'historial_screen.dart';
 import 'calificaciones_screen.dart';
+import 'student_tareas_screen.dart';
+import 'materiales_screen.dart';
+import 'foro_screen.dart';
 
 class StudentDashboard extends StatefulWidget {
   const StudentDashboard({super.key});
@@ -42,7 +45,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header con bienvenida
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -80,8 +82,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
               ),
             ),
             const SizedBox(height: 30),
-            
-            // Sección de navegación rápida
             const Text("Explorar", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 15),
             Row(
@@ -99,11 +99,24 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   Icons.grade_outlined, 
                   const CalificacionesScreen()
                 ),
+                _buildQuickAction(
+                  context, 
+                  "Materiales", 
+                  Icons.library_books, 
+                  MaterialesScreen(curso: cursoProvider.cursos.first),
+                  enabled: cursoProvider.cursos.isNotEmpty,
+                ),
+                const SizedBox(width: 15),
+                _buildQuickAction(
+                  context, 
+                  "Foros", 
+                  Icons.forum_outlined, 
+                  ForoScreen(curso: cursoProvider.cursos.first),
+                  enabled: cursoProvider.cursos.isNotEmpty,
+                ),
               ],
             ),
             const SizedBox(height: 30),
-
-            // Curso Actual
             const Text("Módulo en curso", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 15),
             if (cursoProvider.isLoading)
@@ -118,24 +131,24 @@ class _StudentDashboardState extends State<StudentDashboard> {
     );
   }
 
-  Widget _buildQuickAction(BuildContext context, String label, IconData icon, Widget target) {
+  Widget _buildQuickAction(BuildContext context, String label, IconData icon, Widget target, {bool enabled = true}) {
     return Expanded(
       child: InkWell(
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => target)),
+        onTap: enabled ? () => Navigator.push(context, MaterialPageRoute(builder: (_) => target)) : null,
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: enabled ? Colors.white : Colors.grey[200],
             borderRadius: BorderRadius.circular(15),
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))
+              if (enabled) BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))
             ],
           ),
           child: Column(
             children: [
-              Icon(icon, color: const Color(0xFF4F46E5), size: 30),
+              Icon(icon, color: enabled ? const Color(0xFF4F46E5) : Colors.grey, size: 30),
               const SizedBox(height: 8),
-              Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+              Text(label, style: TextStyle(fontWeight: FontWeight.w600, color: enabled ? Colors.black : Colors.grey)),
             ],
           ),
         ),
@@ -169,6 +182,21 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     ],
                   ),
                 ),
+                _buildQuickAction(
+                  context, 
+                  "Materiales", 
+                  Icons.library_books, 
+                  MaterialesScreen(curso: cursoProvider.cursos.first),
+                  enabled: cursoProvider.cursos.isNotEmpty,
+                ),
+                const SizedBox(width: 15),
+                _buildQuickAction(
+                  context, 
+                  "Foros", 
+                  Icons.forum_outlined, 
+                  ForoScreen(curso: cursoProvider.cursos.first),
+                  enabled: cursoProvider.cursos.isNotEmpty,
+                ),
               ],
             ),
             const Divider(height: 24),
@@ -184,7 +212,14 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   ],
                 ),
                 ElevatedButton(
-                  onPressed: () {}, // Aquí iría a la vista del curso/tareas
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => StudentTareasScreen(curso: curso),
+                      ),
+                    );
+                  },
                   child: const Text("Ir al módulo"),
                 )
               ],

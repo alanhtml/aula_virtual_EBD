@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../models/curso.dart';
 import '../models/user.dart';
 import '../services/dio_client.dart';
-import 'package:dio/dio.dart';
 
 class CalificacionFinalScreen extends StatefulWidget {
   final Curso curso;
@@ -92,6 +90,8 @@ class _CalificacionFinalScreenState extends State<CalificacionFinalScreen> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF059669)),
                 onPressed: () async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  final navigator = Navigator.of(context);
                   try {
                     final dio = DioClient().dio;
                     await dio.post('/cursos/${widget.curso.id}/calificar', data: {
@@ -100,12 +100,12 @@ class _CalificacionFinalScreenState extends State<CalificacionFinalScreen> {
                       'retroalimentacion': retroController.text,
                       'estado': estado,
                     });
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    navigator.pop();
+                    messenger.showSnackBar(
                       const SnackBar(content: Text("Calificación registrada"), backgroundColor: Colors.green),
                     );
                   } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       const SnackBar(content: Text("Error al calificar"), backgroundColor: Colors.red),
                     );
                   }
@@ -132,7 +132,7 @@ class _CalificacionFinalScreenState extends State<CalificacionFinalScreen> {
               itemBuilder: (context, index) {
                 final student = _estudiantes[index];
                 return Card(
-                  margin: const EdgeInsets.bottom(12),
+                  margin: const EdgeInsets.only(bottom: 12),
                   child: ListTile(
                     title: Text(student.name),
                     subtitle: Text(student.email),

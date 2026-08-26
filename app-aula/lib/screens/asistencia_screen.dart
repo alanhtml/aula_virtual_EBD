@@ -4,7 +4,6 @@ import '../models/curso.dart';
 import '../models/user.dart';
 import '../providers/asistencia_provider.dart';
 import '../services/dio_client.dart';
-import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
 
 class AsistenciaScreen extends StatefulWidget {
@@ -68,6 +67,8 @@ class _AsistenciaScreenState extends State<AsistenciaScreen> {
   void _submitAsistencia() async {
     final asistenciaProvider = Provider.of<AsistenciaProvider>(context, listen: false);
     final fechaStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
     
     List<Map<String, dynamic>> data = _estados.entries.map((e) => {
       'user_id': e.key,
@@ -82,12 +83,12 @@ class _AsistenciaScreenState extends State<AsistenciaScreen> {
     );
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         const SnackBar(content: Text("Asistencia guardada correctamente"), backgroundColor: Colors.green),
       );
-      Navigator.pop(context);
+      navigator.pop();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         const SnackBar(content: Text("Error al guardar asistencia"), backgroundColor: Colors.red),
       );
     }

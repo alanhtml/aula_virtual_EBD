@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/curso_provider.dart';
-import 'package:intl/intl.dart';
 
 class HistorialScreen extends StatelessWidget {
   const HistorialScreen({super.key});
@@ -27,7 +26,7 @@ class HistorialScreen extends StatelessWidget {
                       final bool aprobado = pivot?.estado == 'aprobado';
 
                       return Card(
-                        margin: const EdgeInsets.bottom(12),
+                        margin: const EdgeInsets.only(bottom: 12),
                         child: ListTile(
                           title: Text(curso.nombre, style: const TextStyle(fontWeight: FontWeight.bold)),
                           subtitle: Text("Código: ${curso.codigo} • ${curso.semestre}"),

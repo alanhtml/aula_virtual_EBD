@@ -85,7 +85,7 @@ class _TeacherEntregasScreenState extends State<TeacherEntregasScreen> {
                     final bool calificada = entrega.calificacion != null;
 
                     return Card(
-                      margin: const EdgeInsets.bottom(12),
+                      margin: const EdgeInsets.only(bottom: 12),
                       child: ListTile(
                         leading: CircleAvatar(
                           backgroundColor: calificada ? Colors.green[100] : Colors.orange[100],
@@ -94,7 +94,7 @@ class _TeacherEntregasScreenState extends State<TeacherEntregasScreen> {
                             color: calificada ? Colors.green : Colors.orange,
                           ),
                         ),
-                        title: Text("Estudiante #${entrega.userId}"),
+                        title: Text(entrega.user?.name ?? "Estudiante #${entrega.userId}"),
                         subtitle: Text(entrega.comentarioEstudiante ?? "Sin comentarios"),
                         trailing: Text(
                           "${entrega.calificacion?.toStringAsFixed(0) ?? '--'}/${widget.tarea.puntos}",

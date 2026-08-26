@@ -1,9 +1,9 @@
-import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../models/asistencia.dart';
 import 'dio_client.dart';
 
 class AsistenciaService {
-  final Dio _dio = DioClient().dio;
+  final _dio = DioClient().dio;
 
   Future<bool> registrarAsistencia({
     required int cursoId,
@@ -18,7 +18,9 @@ class AsistenciaService {
       });
       return response.statusCode == 200;
     } catch (e) {
-      print("Error registrando asistencia: $e");
+      if (kDebugMode) {
+        print("Error registrando asistencia: $e");
+      }
       return false;
     }
   }
@@ -32,7 +34,9 @@ class AsistenciaService {
       }
       return [];
     } catch (e) {
-      print("Error fetching asistencias: $e");
+      if (kDebugMode) {
+        print("Error fetching asistencias: $e");
+      }
       return [];
     }
   }
