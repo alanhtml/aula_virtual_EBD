@@ -98,7 +98,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
 
   Widget _buildTeacherCursoCard(dynamic curso) {
     return Card(
-      margin: const EdgeInsets.bottom(15),
+      margin: const EdgeInsets.only(bottom: 15),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: Padding(
         padding: const EdgeInsets.all(16),

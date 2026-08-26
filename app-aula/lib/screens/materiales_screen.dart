@@ -97,7 +97,7 @@ class _MaterialesScreenState extends State<MaterialesScreen> {
     // Si la URL es relativa de Laravel, anteponer base URL
     String finalUrl = url;
     if (url.startsWith('/storage')) {
-        finalUrl = "http://10.0.2.2:8000$url";
+        finalUrl = "https://aula-virtual-ebd.onrender.com$url";
     }
     
     final Uri uri = Uri.parse(finalUrl);

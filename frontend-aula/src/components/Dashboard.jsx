@@ -12,6 +12,7 @@ import MisCalificaciones from './MisCalificaciones';
 import HistorialAcademico from './HistorialAcademico';
 import ReporteGeneral from './ReporteGeneral';
 import EscuelaBiblica from './EscuelaBiblica';
+import ServerStats from './ServerStats';
 import { DashboardSkeleton, CourseGridSkeleton, UsersTableSkeleton } from './Skeleton';
 
 const Dashboard = () => {
@@ -494,6 +495,13 @@ const Dashboard = () => {
                         </div>
                       ))}
                     </section>
+
+                    {/* Server Monitoring - ONLY FOR DIRECTOR */}
+                    {user.role === 'director' && (
+                      <section className="mt-4">
+                        <ServerStats />
+                      </section>
+                    )}
 
                     {/* Activity Section */}
                     <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">

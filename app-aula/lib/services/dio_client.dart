@@ -4,8 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 class DioClient {
   late Dio _dio;
   
-  // Cambia esta URL por la IP de tu servidor o localhost para emulador (10.0.2.2)
-  static const String baseUrl = "http://10.0.2.2:8000/api";
+  // URL de producción en Render
+  static const String baseUrl = "https://aula-virtual-ebd.onrender.com/api";
 
   DioClient() {
     _dio = Dio(

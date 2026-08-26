@@ -20,7 +20,7 @@ class DashboardController extends Controller
                 'stats' => [
                     ['label' => 'Usuarios Activos', 'value' => (string)User::count(), 'icon' => 'person', 'color' => 'text-primary'],
                     ['label' => 'Cursos Creados', 'value' => (string)Curso::count(), 'icon' => 'auto_stories', 'color' => 'text-secondary-fixed'],
-                    ['label' => 'Tareas Asignadas', 'value' => (string)Tarea::count(), 'icon' => 'assignment', 'color' => 'text-primary'],
+                    ['label' => 'Estado del Sistema', 'value' => 'Estable', 'icon' => 'dns', 'color' => 'text-primary'],
                 ]
             ]);
         }
@@ -54,6 +54,31 @@ class DashboardController extends Controller
             ]);
         }
 
-        return response()->json(['stats' => []]);
+    public function serverInfo()
+    {
+        if (Auth::user()->role !== 'director') {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        return response()->json([
+            'php_version' => PHP_VERSION,
+            'laravel_version' => app()->version(),
+            'server_os' => PHP_OS,
+            'memory_usage' => $this->formatBytes(memory_get_usage(true)),
+            'database_driver' => \DB::connection()->getDriverName(),
+            'environment' => config('app.env'),
+            'uptime' => 'Activo', // Render no da uptime simple, pero indica que está corriendo
+            'limit_warning' => 'Cerca del límite (512MB RAM en Render Free)'
+        ]);
+    }
+
+    private function formatBytes($bytes, $precision = 2)
+    {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $bytes = max($bytes, 0);
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+        $pow = min($pow, count($units) - 1);
+        $bytes /= pow(1024, $pow);
+        return round($bytes, $precision) . ' ' . $units[$pow];
     }
 }

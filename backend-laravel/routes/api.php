@@ -28,6 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+    Route::get('/dashboard/server-info', [DashboardController::class, 'serverInfo']);
 
     // Gestión de Cursos
     Route::apiResource('cursos', CursoController::class);
