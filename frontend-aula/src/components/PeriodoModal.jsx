@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
 
-const PeriodoModal = ({ isOpen, onClose, añoActual }) => {
+const PeriodoModal = ({ isOpen, onClose, añoActual, onSuccess }) => {
   const [periodos, setPeriodos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -10,14 +10,15 @@ const PeriodoModal = ({ isOpen, onClose, añoActual }) => {
     setLoading(true);
     try {
       const response = await api.get('/periodos');
-      // Filtrar por año actual si es necesario, o mostrar todos los del año
-      const filtered = response.data.filter(p => p.año.toString() === añoActual.toString());
+      // Filtro seguro: verificamos que tanto el periodo como añoActual existan
+      const currentYear = añoActual ? añoActual.toString() : new Date().getFullYear().toString();
+      const filtered = response.data.filter(p => p.año && p.año.toString() === currentYear);
 
       // Si no existen los 3, inicializarlos en el estado
       const names = ['PI', 'PII', 'PIII'];
       const completeList = names.map(name => {
         const found = filtered.find(p => p.nombre === name);
-        return found || { nombre: name, año: añoActual, fecha_inicio: '', fecha_fin: '', activo: true };
+        return found || { nombre: name, año: currentYear, fecha_inicio: '', fecha_fin: '', activo: true };
       });
 
       setPeriodos(completeList);
@@ -51,6 +52,7 @@ const PeriodoModal = ({ isOpen, onClose, añoActual }) => {
         }
       });
       await Promise.all(promises);
+      if (onSuccess) await onSuccess();
       onClose();
     } catch (error) {
       console.error('Error saving periodos:', error);

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
 
-const CursoModal = ({ isOpen, onClose, onSave, cursoToEdit, añoActual }) => {
+const CursoModal = ({ isOpen, onClose, onSave, cursoToEdit, añoActual, periodoActual }) => {
   const [formData, setFormData] = useState({
     nombre: '',
     nivel: '101',
-    periodo: 'PI', // PI, PII, PIII
+    periodo: periodoActual || 'PI', // PI, PII, PIII
     año: añoActual || new Date().getFullYear().toString(),
     horario: 'Domingo 08:00 - 12:00',
     descripcion: '',
@@ -38,12 +38,12 @@ const CursoModal = ({ isOpen, onClose, onSave, cursoToEdit, añoActual }) => {
         if (found && found.fecha_inicio && found.fecha_fin) {
           const start = getMonthName(found.fecha_inicio);
           const end = getMonthName(found.fecha_fin);
-          label += ` (${start}-${end})`;
+          label = `${name} (${start}-${end})`;
         } else {
           // Fallback labels si no hay configuración
-          if (name === 'PI') label += ' (Feb-May)';
-          if (name === 'PII') label += ' (Jun-Sep)';
-          if (name === 'PIII') label += ' (Oct-Ene)';
+          if (name === 'PI') label = 'PI (Feb-May)';
+          if (name === 'PII') label = 'PII (Jun-Sep)';
+          if (name === 'PIII') label = 'PIII (Oct-Ene)';
         }
 
         return { id: name, name: label, data: found };
@@ -86,27 +86,36 @@ const CursoModal = ({ isOpen, onClose, onSave, cursoToEdit, añoActual }) => {
   useEffect(() => {
     if (cursoToEdit && isOpen) {
       const codeParts = cursoToEdit.codigo?.split('-') || [];
-      const periodoId = codeParts[1] || 'PI';
-      const añoVal = codeParts[2] || añoActual || new Date().getFullYear().toString();
+      // Extraer el periodo y año propio del curso que se está editando
+      const periodoId = cursoToEdit.periodo?.nombre || codeParts[1] || 'PI';
+      const añoVal = cursoToEdit.periodo?.año?.toString() || codeParts[2] || new Date().getFullYear().toString();
 
       setFormData({
-        nombre: cursoToEdit.nombre || '',
+        nombre: cursoToEdit.nombre || `Módulo ${cursoToEdit.nivel || '101'}`,
         nivel: cursoToEdit.nivel || '101',
         periodo: periodoId,
-        año: añoVal.toString(),
+        año: añoVal,
         horario: cursoToEdit.horario || 'Domingo 08:00 - 12:00',
         descripcion: cursoToEdit.descripcion || '',
-        codigo: cursoToEdit.codigo || '',
+        codigo: cursoToEdit.codigo || `${cursoToEdit.nivel || '101'}-${periodoId}-${añoVal}`,
         docentes: cursoToEdit.docentes?.map(d => d.id) || (cursoToEdit.docente_id ? [cursoToEdit.docente_id] : []),
       });
     } else if (!cursoToEdit && isOpen) {
-      setFormData(prev => ({
-        ...prev,
-        año: añoActual || new Date().getFullYear().toString(),
+      // Para un nuevo módulo, sí sugerir el periodo y año activo del dashboard
+      const defaultPeriodo = periodoActual || 'PI';
+      const defaultAño = añoActual || new Date().getFullYear().toString();
+      setFormData({
+        nombre: 'Módulo 101',
+        nivel: '101',
+        periodo: defaultPeriodo,
+        año: defaultAño,
+        horario: 'Domingo 08:00 - 12:00',
+        descripcion: '',
+        codigo: `101-${defaultPeriodo}-${defaultAño}`,
         docentes: []
-      }));
+      });
     }
-  }, [cursoToEdit, isOpen, añoActual]);
+  }, [cursoToEdit, isOpen]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -128,11 +137,12 @@ const CursoModal = ({ isOpen, onClose, onSave, cursoToEdit, añoActual }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const activeConfig = configPeriodos.find(p => p.id === formData.periodo);
-    const periodoFull = activeConfig ? activeConfig.name + " " + formData.año : `Periodo ${formData.periodo} ${formData.año}`;
+    const periodoFull = activeConfig ? activeConfig.name : `Periodo ${formData.periodo}`;
 
     onSave({
       ...formData,
       semestre: periodoFull,
+      periodo_id: activeConfig?.data?.id || null,
       docente_id: formData.docentes[0] || null,
       docentes: formData.docentes,
       fecha_inicio: activeConfig?.data?.fecha_inicio || null,
@@ -199,28 +209,26 @@ const CursoModal = ({ isOpen, onClose, onSave, cursoToEdit, añoActual }) => {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest ml-1">Periodo Anual</label>
-            <select
-              name="periodo"
-              value={formData.periodo}
-              onChange={handleChange}
-              className="glass-input rounded-xl px-4 py-4 text-sm focus:ring-2 focus:ring-primary/50 outline-none appearance-none"
-              required
-            >
-              {configPeriodos.map(p => (
-                <option key={p.id} value={p.id} className="bg-[#131313]">{p.name}</option>
-              ))}
-            </select>
+            <label className="text-[10px] font-black text-primary/70 uppercase tracking-widest ml-1">Periodo Anual (Automático)</label>
+            <div className="relative">
+              <input
+                type="text"
+                value={configPeriodos.find(p => p.id === formData.periodo)?.name || formData.periodo}
+                className="glass-input rounded-xl px-4 py-4 text-sm bg-primary/5 text-primary font-bold border-primary/20 outline-none cursor-not-allowed w-full pr-10"
+                readOnly
+              />
+              <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-primary/40 text-sm">lock</span>
+            </div>
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest ml-1">Año Lectivo</label>
+            <label className="text-[10px] font-black text-primary/70 uppercase tracking-widest ml-1">Año Lectivo (Automático)</label>
             <div className="relative">
               <input
                 type="text"
                 name="año"
                 value={formData.año}
-                className="glass-input rounded-xl px-4 py-4 text-sm bg-primary/5 text-primary font-bold border-primary/20 outline-none cursor-not-allowed w-full"
+                className="glass-input rounded-xl px-4 py-4 text-sm bg-primary/5 text-primary font-bold border-primary/20 outline-none cursor-not-allowed w-full pr-10"
                 readOnly
               />
               <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-primary/40 text-sm">lock</span>

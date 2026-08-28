@@ -40,8 +40,10 @@ const Dashboard = () => {
   const [periodos, setPeriodos] = useState([]);
   const [periodoActivo, setPeriodoActivo] = useState(null);
   const [cursoFilter, setCursoFilter] = useState({
-    periodoId: null, // null = todos los periodos
-    label: 'Todos los Periodos'
+    periodoId: null,
+    periodo: '',
+    año: '',
+    label: 'Detectando Ciclo...'
   });
 
   // State para confirmaciones con diseño
@@ -81,29 +83,46 @@ const Dashboard = () => {
     }
   }, [navigate]);
 
-  // Detectar periodo activo por fecha al montar el componente
-  useEffect(() => {
-    const detectarPeriodo = async () => {
-      try {
-        const [activoRes, todosRes] = await Promise.all([
-          api.get('/periodos/activo'),
-          api.get('/periodos')
-        ]);
-        const activo = activoRes.data;
-        const todos = todosRes.data;
-        setPeriodos(todos);
-        if (activo) {
-          setPeriodoActivo(activo);
-          // Pre-seleccionar el filtro al periodo vigente usando su ID
-          setCursoFilter({
-            periodoId: activo.id,
-            label: `${activo.nombre} - ${activo.año}`
-          });
-        }
-      } catch (err) {
-        console.warn('No se pudo detectar el periodo activo:', err);
+  // Detectar periodo activo por fecha
+  const detectarPeriodo = async () => {
+    try {
+      const [activoRes, todosRes] = await Promise.all([
+        api.get('/periodos/activo'),
+        api.get('/periodos')
+      ]);
+      const activo = activoRes.data;
+      const todos = todosRes.data;
+      setPeriodos(todos);
+
+      if (activo) {
+        setPeriodoActivo(activo);
+        setCursoFilter({
+          periodoId: activo.id,
+          periodo: activo.nombre,
+          año: activo.año.toString(),
+          label: `${activo.nombre} - ${activo.año}`
+        });
+      } else if (todos.length > 0) {
+        // Si no hay periodo activo hoy, buscar el más cercano en el futuro o el último configurado
+        const hoyTs = new Date().getTime();
+        const futuros = todos.filter(p => new Date(p.fecha_inicio).getTime() > hoyTs)
+                           .sort((a, b) => new Date(a.fecha_inicio).getTime() - new Date(b.fecha_inicio).getTime());
+
+        const predeterminado = futuros.length > 0 ? futuros[0] : todos[todos.length - 1];
+
+        setCursoFilter({
+          periodoId: predeterminado.id,
+          periodo: predeterminado.nombre,
+          año: predeterminado.año.toString(),
+          label: `${predeterminado.nombre} - ${predeterminado.año}`
+        });
       }
-    };
+    } catch (err) {
+      console.warn('No se pudo detectar el periodo activo:', err);
+    }
+  };
+
+  useEffect(() => {
     detectarPeriodo();
   }, []);
 
@@ -240,17 +259,46 @@ const Dashboard = () => {
     setIsPeriodoModalOpen(true);
   };
 
-  const handleSavePeriodo = async (formData) => {
+  const handleSavePeriodo = async () => {
     try {
-      if (selectedPeriodo?.id) {
-        await api.put(`/periodos/${selectedPeriodo.id}`, formData);
-      } else {
-        await api.post('/periodos', formData);
+      // Forzar recarga completa de datos de periodos
+      const [activoRes, todosRes] = await Promise.all([
+        api.get('/periodos/activo'),
+        api.get('/periodos')
+      ]);
+
+      const todos = todosRes.data;
+      const activo = activoRes.data;
+
+      setPeriodos(todos);
+
+      if (activo) {
+        setPeriodoActivo(activo);
+        setCursoFilter({
+          periodoId: activo.id,
+          periodo: activo.nombre,
+          año: activo.año.toString(),
+          label: `${activo.nombre} - ${activo.año}`
+        });
+      } else if (todos.length > 0) {
+        // Si no hay activo, intentar mantener el que estaba o seleccionar el más cercano
+        const hoyTs = new Date().getTime();
+        const futuros = todos.filter(p => new Date(p.fecha_inicio).getTime() > hoyTs)
+                           .sort((a, b) => new Date(a.fecha_inicio).getTime() - new Date(b.fecha_inicio).getTime());
+
+        const predeterminado = futuros.length > 0 ? futuros[0] : todos[todos.length - 1];
+
+        setCursoFilter({
+          periodoId: predeterminado.id,
+          periodo: predeterminado.nombre,
+          año: predeterminado.año.toString(),
+          label: `${predeterminado.nombre} - ${predeterminado.año}`
+        });
       }
-      setIsPeriodoModalOpen(false);
-      showConfirm('Éxito', 'Las fechas del periodo se han actualizado correctamente.', () => {}, 'success');
+
+      showConfirm('Éxito', 'Las fechas del periodo se han actualizado y el ciclo se ha sincronizado.', () => {}, 'success');
     } catch (error) {
-      console.error('Error saving periodo:', error);
+      console.error('Error refreshing periodos:', error);
     }
   };
 
@@ -321,24 +369,19 @@ const Dashboard = () => {
 
   const roleStats = {
     estudiantes: [
-      { label: 'Promedio General', value: '9.2', icon: 'grade', color: 'text-primary' },
-      { label: 'Tareas Completadas', value: '15/18', icon: 'task_alt', color: 'text-secondary-fixed' },
-      { label: 'Módulos Activos', value: '6', icon: 'library_books', color: 'text-primary' },
+      { label: 'Mi Nivel Actual', value: user?.nivel_actual || '101', icon: 'star', color: 'text-primary' },
+      { label: 'Módulos Aprobados', value: (cursos || []).filter(c => c.pivot?.estado === 'aprobado').length.toString(), icon: 'task_alt', color: 'text-secondary-fixed' },
+      { label: 'Aula Actual', value: (cursos || []).find(c => c.pivot?.estado === 'cursando')?.codigo || 'Ninguna', icon: 'door_open', color: 'text-primary' },
     ],
     docentes: [
-      { label: 'Total Estudiantes', value: '145', icon: 'group', color: 'text-primary' },
-      { label: 'Módulos Asignados', value: '4', icon: 'cast_for_education', color: 'text-secondary-fixed' },
-      { label: 'Tareas por Corregir', value: '32', icon: 'pending_actions', color: 'text-primary' },
-    ],
-    secretaria: [
-      { label: 'Nuevos Inscritos', value: '28', icon: 'person_add', color: 'text-primary' },
-      { label: 'Trámites Pendientes', value: '12', icon: 'hourglass_empty', color: 'text-secondary-fixed' },
-      { label: 'Pagos del Mes', value: '$4,200', icon: 'payments', color: 'text-primary' },
+      { label: 'Total Estudiantes', value: (users || []).filter(u => u.role === 'estudiantes').length.toString(), icon: 'group', color: 'text-primary' },
+      { label: 'Módulos Asignados', value: (cursos || []).length.toString(), icon: 'cast_for_education', color: 'text-secondary-fixed' },
+      { label: 'Periodo Activo', value: periodoActivo ? periodoActivo.nombre : 'Sin Ciclo', icon: 'calendar_today', color: 'text-primary' },
     ],
     director: [
-      { label: 'Usuarios Activos', value: '1,248', icon: 'person', color: 'text-primary' },
-      { label: 'Módulos Creados', value: '86', icon: 'auto_stories', color: 'text-secondary-fixed' },
-      { label: 'Estado del Servidor', value: 'Óptimo', icon: 'dns', color: 'text-primary' },
+      { label: 'Usuarios Activos', value: (users || []).length.toString(), icon: 'person', color: 'text-primary' },
+      { label: 'Módulos en Sistema', value: (cursos || []).length.toString(), icon: 'auto_stories', color: 'text-secondary-fixed' },
+      { label: 'Ciclo Actual', value: periodoActivo ? `${periodoActivo.nombre} - ${periodoActivo.año}` : 'Configurar', icon: 'dns', color: 'text-primary' },
     ],
   };
 
@@ -391,6 +434,137 @@ const Dashboard = () => {
   const currentActions = roleActions[user.role] || roleActions.estudiantes;
   const currentTable = roleTable[user.role] || roleTable.estudiantes;
 
+  const filteredCursos = (cursos || []).filter(curso => {
+    // Si es docente, solo ve sus cursos
+    if (user.role === 'docentes') {
+      if (curso.docente_id !== user.id) return false;
+    }
+    // Filtrar por periodo si hay uno seleccionado
+    if (cursoFilter.periodoId) {
+      return curso.periodo_id === cursoFilter.periodoId;
+    }
+    return true;
+  });
+  const handleCerrarCiclo = () => {
+    const label = periodoActivo ? `${periodoActivo.nombre} - ${periodoActivo.año}` : 'el ciclo actual';
+    showConfirm(
+      `¿Cerrar y Promocionar Ciclo ${label}?`,
+      `Esta acción evaluará automáticamente a todos los estudiantes inscritos:
+
+• Los alumnos con nota final ≥ 61 quedarán APROBADOS.
+• Su nivel avanzará secuencialmente al siguiente módulo (101→201→301→401→501).
+• El historial académico quedará archivado con el ciclo ${label}.
+• El ciclo se marcará como finalizado para dar paso al nuevo periodo.`,
+      async () => {
+        try {
+          const res = await api.post('/periodos/cerrar-ciclo', {
+            periodo_id: periodoActivo?.id
+          });
+          showConfirm(
+            '¡Ciclo Cerrado y Alumnos Promocionados!',
+            `${res.data.message}\n\n• Estudiantes procesados: ${res.data.estudiantes_procesados}\n• Estudiantes promovidos al siguiente nivel: ${res.data.estudiantes_promocionados}`,
+            () => {
+              fetchCursos();
+              fetchStats();
+              api.get('/periodos').then(r => setPeriodos(r.data));
+              api.get('/periodos/activo').then(r => setPeriodoActivo(r.data));
+            },
+            'info'
+          );
+        } catch (error) {
+          console.error('Error al cerrar el ciclo:', error);
+          showConfirm('Error', 'No se pudo procesar el cierre del ciclo.', () => {}, 'danger');
+        }
+      },
+      'warning'
+    );
+  };
+
+  const getPeriodoBtnConfig = () => {
+    const periodoEnVista = periodos.find(p => p.id === cursoFilter.periodoId) || periodoActivo;
+
+    if (!periodoEnVista || !periodoEnVista.fecha_inicio || !periodoEnVista.fecha_fin) {
+      return {
+        label: 'Configurar Ciclo',
+        icon: 'calendar_month',
+        color: 'bg-primary shadow-lg',
+        action: () => setIsPeriodoModalOpen(true)
+      };
+    }
+
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const hoyTs = hoy.getTime();
+
+    const toDate = (dateStr) => {
+      if (!dateStr) return null;
+      const clean = dateStr.split('T')[0];
+      const [y, m, d] = clean.split(/[-/]/);
+      const year = y.length === 4 ? parseInt(y) : parseInt(d);
+      const month = y.length === 4 ? parseInt(m) - 1 : parseInt(y) - 1;
+      const day = y.length === 4 ? parseInt(d) : parseInt(m);
+      const date = new Date(year, month, day);
+      date.setHours(0, 0, 0, 0);
+      return date;
+    };
+
+    const inicio = toDate(periodoEnVista.fecha_inicio);
+    const fin = toDate(periodoEnVista.fecha_fin);
+
+    if (!inicio || !fin) {
+      return {
+        label: 'Configurar Fechas',
+        icon: 'calendar_month',
+        color: 'bg-glass-fill border border-glass-border text-primary',
+        action: () => setIsPeriodoModalOpen(true)
+      };
+    }
+
+    const inicioTs = inicio.getTime();
+    const finTs = fin.getTime();
+    const cierreTs = finTs - (14 * 24 * 60 * 60 * 1000); // 14 días antes del fin
+
+    // CASO: Ciclo Cerrado (activo === 0 o false)
+    if (periodoEnVista.activo === 0 || periodoEnVista.activo === false || hoyTs > finTs) {
+      return {
+        label: 'Ciclo Finalizado',
+        icon: 'task_alt',
+        color: 'bg-glass-fill border border-primary/50 text-primary',
+        action: () => setIsPeriodoModalOpen(true)
+      };
+    }
+
+    // Si hoy es ANTES de que empiece
+    if (hoyTs < inicioTs) {
+      return {
+        label: `Iniciar ${periodoEnVista.nombre}`,
+        icon: 'rocket_launch',
+        color: 'bg-primary shadow-lg shadow-primary/40',
+        action: handleAperturaMasiva
+      };
+    }
+
+    // Si estamos en las últimas 2 semanas o listos para cerrar
+    if (hoyTs >= cierreTs) {
+      return {
+        label: 'Cerrar Periodo',
+        icon: 'lock_clock',
+        color: 'bg-error text-white shadow-lg shadow-error/40 animate-pulse',
+        action: handleCerrarCiclo
+      };
+    }
+
+    // SI ESTAMOS DENTRO DEL RANGO ACTIVO
+    return {
+      label: 'Ciclo en Curso',
+      icon: 'verified',
+      color: 'bg-secondary-fixed text-on-secondary-fixed shadow-lg shadow-secondary-fixed/20',
+      action: handleCerrarCiclo
+    };
+  };
+
+  const btnPeriodo = getPeriodoBtnConfig();
+
   return (
     <div className="font-body-md text-body-md antialiased min-h-screen flex text-on-surface bg-void-black">
       {/* Ambient Background */}
@@ -422,11 +596,11 @@ const Dashboard = () => {
         {(user.role === 'director' || user.role === 'secretaria') && (
           <div className="p-4">
             <button
-              onClick={handleAperturaMasiva}
-              className="w-full py-3 px-4 rounded-lg glass-button-primary text-primary-fixed font-label-md text-sm flex items-center justify-center gap-2 hover:bg-opacity-60 transition-all duration-300"
+              onClick={btnPeriodo.action}
+              className={`w-full py-3 px-4 rounded-xl ${btnPeriodo.color} text-on-primary font-bold text-xs flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg`}
             >
-              <span className="material-symbols-outlined">add</span>
-              Nuevo Periodo
+              <span className="material-symbols-outlined text-sm">{btnPeriodo.icon}</span>
+              {btnPeriodo.label}
             </button>
           </div>
         )}
@@ -748,21 +922,29 @@ const Dashboard = () => {
                   {(user.role === 'director' || user.role === 'secretaria') && (
                     <div className="flex gap-2 flex-wrap">
                       {/* Badge del periodo detectado automáticamente */}
-                                          <div className="flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary border border-primary/30 rounded-full text-xs font-bold">
+                      {periodoActivo && (
+                        <div className="flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary border border-primary/30 rounded-full text-xs font-bold">
                           <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse inline-block"></span>
                           Ciclo Activo
-                        </span>
+                        </div>
                       )}
                       <select
                         value={cursoFilter.periodoId ?? 'ALL'}
                         onChange={(e) => {
                           const val = e.target.value;
                           if (val === 'ALL') {
-                            setCursoFilter({ periodoId: null, label: 'Todos los Periodos' });
+                            setCursoFilter({
+                              periodoId: null,
+                              periodo: 'PI',
+                              año: new Date().getFullYear().toString(),
+                              label: 'Todos los Periodos'
+                            });
                           } else {
                             const p = periodos.find(p => p.id === parseInt(val));
                             setCursoFilter({
                               periodoId: p.id,
+                              periodo: p.nombre,
+                              año: p.año.toString(),
                               label: `${p.nombre} - ${p.año}`
                             });
                           }
@@ -798,17 +980,8 @@ const Dashboard = () => {
                 {loading ? <CourseGridSkeleton /> : (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {cursos
-                        .filter(c => {
-                          if (user.role === 'director' || user.role === 'secretaria') {
-                            // Filtro exacto por ID de periodo — sin string matching
-                            if (cursoFilter.periodoId === null) return true;
-                            return c.periodo_id === cursoFilter.periodoId;
-                          }
-                          return true;
-                        })
-                        .map((curso) => (
-                        <div key={curso.id} className="glass-card p-6 rounded-2xl flex flex-col gap-4 border border-glass-border hover:border-primary/50 transition-all">
+                      {filteredCursos.map((curso) => (
+                        <div key={curso.id} className="glass-card p-6 rounded-2xl flex flex-col gap-4 border border-glass-border hover:border-primary/50 transition-all shadow-xl shadow-black/20">
                           <div className="flex justify-between items-start">
                             <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold uppercase tracking-widest">
                               Nivel {curso.nivel}
@@ -822,7 +995,19 @@ const Dashboard = () => {
                           <div className="flex flex-col gap-2 border-t border-glass-border pt-4">
                             <div className="flex items-center gap-2 text-sm text-on-surface-variant">
                               <span className="material-symbols-outlined text-sm">calendar_month</span>
-                              <span>{curso.horario} - {curso.semestre}</span>
+                              <div className="flex flex-col">
+                                <span>{curso.horario}</span>
+                                <div className="flex items-center gap-2">
+                                  <span>{curso.semestre}</span>
+                                  {curso.periodo && (
+                                    <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-tighter border ${
+                                      curso.periodo.activo ? 'bg-secondary-fixed/10 text-secondary-fixed border-secondary-fixed/30' : 'bg-glass-fill text-on-surface-variant/50 border-glass-border'
+                                    }`}>
+                                      {curso.periodo.activo ? 'Ciclo en curso' : 'Ciclo Finalizado'}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                             <div className="flex items-center gap-2 text-sm text-on-surface-variant">
                               <span className="material-symbols-outlined text-sm">person</span>
@@ -844,32 +1029,19 @@ const Dashboard = () => {
                       ))}
                     </div>
 
-                    {cursos.length > 0 && (user.role === 'director' || user.role === 'secretaria') && (
-                      cursos.filter(c => {
-                        if (cursoFilter.periodoId === null) return true;
-                        return c.periodo_id === cursoFilter.periodoId;
-                      }).length === 0
-                    ) && (
-                      <div className="py-20 flex flex-col items-center justify-center text-on-surface-variant/40 bg-glass-fill rounded-3xl border border-glass-border border-dashed w-full col-span-full">
-                        <span className="material-symbols-outlined text-6xl mb-4">manage_search</span>
-                        <p className="text-lg font-bold">Módulos no encontrados en este periodo</p>
+                    {filteredCursos.length === 0 && (
+                      <div className="py-20 flex flex-col items-center justify-center text-on-surface-variant/40 bg-glass-fill rounded-3xl border border-glass-border border-dashed w-full col-span-full animate-in zoom-in-95 duration-300">
+                        <span className="material-symbols-outlined text-6xl mb-4 text-primary/40">manage_search</span>
+                        <p className="text-lg font-bold text-on-surface">Módulos no encontrados en este ciclo</p>
                         <p className="text-sm mb-6 text-center px-4">
-                          El sistema tiene <b>{cursos.length} cursos</b> registrados, pero ninguno coincide con "{cursoFilter.periodo} - {cursoFilter.año}".
+                          El sistema tiene <b>{cursos.length} cursos</b> registrados en total, pero ninguno coincide con "{cursoFilter.label}".
                         </p>
                         <button
-                          onClick={() => setCursoFilter({ ...cursoFilter, periodo: 'ALL' })}
+                          onClick={() => setCursoFilter({ periodoId: null, label: 'Todos los Periodos' })}
                           className="px-8 py-3 rounded-xl bg-primary text-on-primary text-sm font-bold shadow-lg shadow-primary/30 hover:scale-105 transition-transform"
                         >
-                          Ver los {cursos.length} cursos existentes
+                          Ver todos los cursos
                         </button>
-                      </div>
-                    )}
-
-                    {cursos.length === 0 && (
-                      <div className="py-20 flex flex-col items-center justify-center text-on-surface-variant/40 bg-glass-fill rounded-3xl border border-glass-border border-dashed w-full col-span-full">
-                        <span className="material-symbols-outlined text-6xl mb-4">inventory_2</span>
-                        <p className="text-lg font-bold">Base de datos vacía</p>
-                        <p className="text-sm mb-6 text-center px-4">Aún no se han creado cursos en el sistema.</p>
                       </div>
                     )}
                   </>
@@ -938,7 +1110,8 @@ const Dashboard = () => {
         onClose={() => setIsCursoModalOpen(false)}
         onSave={handleSaveCurso}
         cursoToEdit={selectedCurso}
-        añoActual={cursoFilter.año}
+        añoActual={periodoActivo ? periodoActivo.año.toString() : new Date().getFullYear().toString()}
+        periodoActual={periodoActivo ? periodoActivo.nombre : 'PI'}
       />
       <InscripcionModal
         isOpen={isInscripcionModalOpen}
@@ -962,6 +1135,7 @@ const Dashboard = () => {
         isOpen={isPeriodoModalOpen}
         onClose={() => setIsPeriodoModalOpen(false)}
         añoActual={cursoFilter.año}
+        onSuccess={handleSavePeriodo}
       />
       <ConfirmModal
         isOpen={confirmConfig.isOpen}

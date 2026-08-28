@@ -32,6 +32,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard/server-info', [DashboardController::class, 'serverInfo']);
 
     // Gestión de Cursos
+    Route::post('cursos/auto-inscribir', [CursoController::class, 'autoInscribir']);
+    Route::get('cursos/disponible-inscripcion', [CursoController::class, 'cursoDisponibleInscripcion']);
     Route::apiResource('cursos', CursoController::class);
     Route::post('cursos/{curso}/inscribir', [CursoController::class, 'inscribirEstudiantes']);
     Route::post('cursos/{curso}/calificar', [CursoController::class, 'calificarEstudiante']);
@@ -42,6 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Gestión de Periodos
     Route::get('periodos', [PeriodoController::class, 'index']);
     Route::get('periodos/activo', [PeriodoController::class, 'activo']); // Detecta el periodo vigente por fecha
+    Route::post('periodos/cerrar-ciclo', [PeriodoController::class, 'cerrarCiclo']);
     Route::post('periodos', [PeriodoController::class, 'store']);
     Route::put('periodos/{id}', [PeriodoController::class, 'update']);
     Route::get('periodos/{nombre}/{año}', [PeriodoController::class, 'show']);

@@ -5,6 +5,7 @@ const ReporteGeneral = () => {
   const [reporte, setReporte] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isClosing, setIsClosing] = useState(false);
 
   useEffect(() => {
     fetchReporte();
@@ -18,6 +19,36 @@ const ReporteGeneral = () => {
       console.error('Error fetching reporte:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCerrarCiclo = async () => {
+    // Detectar periodo activo para confirmación precisa
+    let periodoLabel = 'el ciclo actual';
+    let periodoId = null;
+
+    try {
+      const pRes = await api.get('/periodos/activo');
+      if (pRes.data) {
+        periodoLabel = `${pRes.data.nombre} - ${pRes.data.año}`;
+        periodoId = pRes.data.id;
+      }
+    } catch (e) {}
+
+    if (!window.confirm(`¿Está seguro de cerrar definitivamente el ciclo ${periodoLabel}? \n\nEsto promocionará automáticamente a los estudiantes con nota ≥ 61 al siguiente nivel y marcará el periodo como finalizado.`)) {
+      return;
+    }
+
+    setIsClosing(true);
+    try {
+      await api.post('/periodos/cerrar-ciclo', { periodo_id: periodoId });
+      alert(`Ciclo ${periodoLabel} cerrado exitosamente. Los estudiantes han sido promocionados.`);
+      fetchReporte();
+    } catch (error) {
+      console.error('Error al cerrar el ciclo:', error);
+      alert('Error al procesar el cierre del ciclo.');
+    } finally {
+      setIsClosing(false);
     }
   };
 
@@ -70,13 +101,23 @@ const ReporteGeneral = () => {
           <h2 className="text-3xl font-headline-lg text-on-surface">Reporte Académico General</h2>
           <p className="text-sm text-on-surface-variant">Vista global del progreso de todos los estudiantes inscritos.</p>
         </div>
-        <button
-          onClick={exportToCSV}
-          className="glass-button-primary px-6 py-3 rounded-xl text-primary-fixed flex items-center gap-2"
-        >
-          <span className="material-symbols-outlined">download</span>
-          Exportar CSV
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleCerrarCiclo}
+            disabled={isClosing}
+            className="px-6 py-3 rounded-xl bg-error text-white font-bold flex items-center gap-2 shadow-lg shadow-error/20 hover:scale-105 transition-all disabled:opacity-50"
+          >
+            <span className="material-symbols-outlined">lock_reset</span>
+            {isClosing ? 'Procesando...' : 'Cerrar Ciclo y Promocionar'}
+          </button>
+          <button
+            onClick={exportToCSV}
+            className="glass-button-primary px-6 py-3 rounded-xl text-primary-fixed flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined">download</span>
+            Exportar CSV
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-4 mb-2">
@@ -126,9 +167,15 @@ const ReporteGeneral = () => {
                     {est.cursos.length > 0 ? (
                       <div className="flex flex-wrap gap-2">
                         {est.cursos.map((c, i) => (
-                          <div key={i} className="px-3 py-1 rounded-lg bg-glass-fill border border-glass-border text-[10px] flex flex-col">
+                          <div key={i} className={`px-3 py-1 rounded-lg bg-glass-fill border text-[10px] flex flex-col ${c.nota >= 61 ? 'border-primary/50 bg-primary/5' : 'border-glass-border'}`}>
                             <span className="font-bold text-on-surface">{c.modulo}</span>
-                            <span className="text-primary/70">{c.nota || '0'} pts</span>
+                            <span className={`font-bold ${c.nota >= 61 ? 'text-primary' : 'text-primary/70'}`}>{c.nota || '0'} pts</span>
+                            {c.nota >= 61 && (
+                              <span className="text-[7px] text-primary font-black uppercase mt-0.5 flex items-center gap-0.5">
+                                <span className="material-symbols-outlined text-[8px]">trending_up</span>
+                                Promovible
+                              </span>
+                            )}
                           </div>
                         ))}
                       </div>

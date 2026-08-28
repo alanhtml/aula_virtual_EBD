@@ -21,12 +21,33 @@ class CursoService {
 
   Future<List<Curso>> getMisCursos() async {
     try {
-      // Por ahora usamos el historial y filtramos los que están "cursando"
-      // o adaptamos el backend si es necesario.
       final historial = await getHistorialAcademico();
       return historial.where((c) => c.pivot?.estado == 'cursando').toList();
     } catch (e) {
       return [];
+    }
+  }
+
+  Future<Map<String, dynamic>?> getDisponibleInscripcion() async {
+    try {
+      final response = await _dio.get('/cursos/disponible-inscripcion');
+      if (response.statusCode == 200) {
+        return Map<String, dynamic>.from(response.data);
+      }
+      return null;
+    } catch (e) {
+      print("Error fetching disponible inscripcion: $e");
+      return null;
+    }
+  }
+
+  Future<bool> autoInscribirme() async {
+    try {
+      final response = await _dio.post('/cursos/auto-inscribir');
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error in autoInscribirme: $e");
+      return false;
     }
   }
 }

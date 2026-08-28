@@ -12,6 +12,74 @@ class CursoController extends Controller
     public function index()
     {
         $user = auth()->user();
+
+        // 1. Detección y Enlace Automático al Periodo Activo por Fecha
+        $hoy = \Carbon\Carbon::today();
+        $periodoActivo = Periodo::where('fecha_inicio', '<=', $hoy)
+            ->where('fecha_fin', '>=', $hoy)
+            ->first();
+
+        // 2. Si hay un periodo activo según el calendario, auto-enlazar y asegurar los 5 módulos base
+        if ($periodoActivo) {
+            $niveles = ['101', '201', '301', '401', '501'];
+            $nombres = [
+                '101' => 'Fundamentos de la Fe',
+                '201' => 'Historia del Cristianismo',
+                '301' => 'Hermenéutica Bíblica',
+                '401' => 'Teología Sistemática',
+                '501' => 'Liderazgo y Misiones',
+            ];
+
+            foreach ($niveles as $nivel) {
+                // Asegurar molde maestro permanente
+                $master = ModuloMaster::firstOrCreate(
+                    ['nivel' => $nivel],
+                    [
+                        'nombre' => $nombres[$nivel],
+                        'descripcion' => "Contenido maestro para el Módulo {$nivel}."
+                    ]
+                );
+
+                // Comprobar si ya existe cursada para este periodo activo
+                $cursoExistente = Curso::where('modulo_master_id', $master->id)
+                    ->where('periodo_id', $periodoActivo->id)
+                    ->first();
+
+                if (!$cursoExistente) {
+                    // Si hay un curso de este nivel con periodo null, asignarlo al periodo activo
+                    $cursoSinPeriodo = Curso::where('nivel', $nivel)
+                        ->whereNull('periodo_id')
+                        ->first();
+
+                    if ($cursoSinPeriodo) {
+                        $cursoSinPeriodo->update([
+                            'periodo_id' => $periodoActivo->id,
+                            'modulo_master_id' => $master->id,
+                            'semestre' => "{$periodoActivo->nombre} - {$periodoActivo->año}",
+                            'codigo' => "{$nivel}-{$periodoActivo->nombre}-{$periodoActivo->año}"
+                        ]);
+                    } else {
+                        // Crear la cursada vinculada automáticamente al periodo activo
+                        Curso::firstOrCreate(
+                            ['modulo_master_id' => $master->id, 'periodo_id' => $periodoActivo->id],
+                            [
+                                'nombre' => $nombres[$nivel],
+                                'nivel' => $nivel,
+                                'semestre' => "{$periodoActivo->nombre} - {$periodoActivo->año}",
+                                'horario' => 'Domingos 08:00 - 12:00',
+                                'descripcion' => "Instancia del Módulo {$nivel} para el periodo {$periodoActivo->nombre} {$periodoActivo->año}.",
+                                'codigo' => "{$nivel}-{$periodoActivo->nombre}-{$periodoActivo->año}",
+                                'fecha_inicio' => $periodoActivo->fecha_inicio,
+                                'fecha_fin' => $periodoActivo->fecha_fin,
+                                'modulo_master_id' => $master->id,
+                                'periodo_id' => $periodoActivo->id,
+                            ]
+                        );
+                    }
+                }
+            }
+        }
+
         $query = Curso::with(['docente', 'docentes', 'moduloMaster', 'periodo']);
 
         if ($user->role === 'docentes') {
@@ -304,5 +372,156 @@ class CursoController extends Controller
             'periodo' => $periodoObj,
             'cursos'  => $cursosCreados,
         ]);
+    }
+
+    public function cursoDisponibleInscripcion()
+    {
+        $user = auth()->user();
+        if ($user->role !== 'estudiantes') {
+            return response()->json(['disponible' => false]);
+        }
+
+        // Si ya está cursando, no necesita auto-inscribirse
+        $cursoActivo = $user->cursos()->wherePivot('estado', 'cursando')->first();
+        if ($cursoActivo) {
+            return response()->json([
+                'disponible' => false,
+                'ya_inscrito' => true,
+                'curso_actual' => $cursoActivo->load('periodo')
+            ]);
+        }
+
+        $hoy = \Carbon\Carbon::today();
+        $periodoActivo = Periodo::where('fecha_inicio', '<=', $hoy)
+            ->where('fecha_fin', '>=', $hoy)
+            ->first();
+
+        if (!$periodoActivo) {
+            $periodoActivo = Periodo::where('activo', true)->orderBy('año', 'desc')->orderBy('nombre', 'desc')->first();
+        }
+
+        if (!$periodoActivo) {
+            return response()->json(['disponible' => false, 'message' => 'No hay periodo activo para inscripciones']);
+        }
+
+        $nivelObjetivo = $user->nivel_actual ?? '101';
+        $nombres = [
+            '101' => 'Fundamentos de la Fe',
+            '201' => 'Historia del Cristianismo',
+            '301' => 'Hermenéutica Bíblica',
+            '401' => 'Teología Sistemática',
+            '501' => 'Liderazgo y Misiones',
+        ];
+
+        // Buscar curso del periodo activo
+        $curso = Curso::where('nivel', $nivelObjetivo)
+            ->where('periodo_id', $periodoActivo->id)
+            ->with(['docente', 'docentes', 'periodo'])
+            ->first();
+
+        return response()->json([
+            'disponible' => true,
+            'nivel' => $nivelObjetivo,
+            'nombre_modulo' => $nombres[$nivelObjetivo] ?? "Módulo {$nivelObjetivo}",
+            'periodo' => "{$periodoActivo->nombre} - {$periodoActivo->año}",
+            'periodo_id' => $periodoActivo->id,
+            'curso_id' => $curso ? $curso->id : null,
+            'docente' => $curso && $curso->docente ? $curso->docente->name : 'Profesor asignado',
+            'horario' => $curso ? $curso->horario : 'Domingos 08:00 - 12:00',
+            'fecha_inicio' => $periodoActivo->fecha_inicio,
+            'fecha_fin' => $periodoActivo->fecha_fin,
+        ]);
+    }
+
+    public function autoInscribir(Request $request)
+    {
+        $user = auth()->user();
+        if ($user->role !== 'estudiantes') {
+            return response()->json(['message' => 'Solo estudiantes pueden auto-inscribirse'], 403);
+        }
+
+        $hoy = \Carbon\Carbon::today();
+        $periodoActivo = Periodo::where('fecha_inicio', '<=', $hoy)
+            ->where('fecha_fin', '>=', $hoy)
+            ->first();
+
+        if (!$periodoActivo) {
+            $periodoActivo = Periodo::where('activo', true)->orderBy('año', 'desc')->orderBy('nombre', 'desc')->first();
+        }
+
+        if (!$periodoActivo) {
+            return response()->json(['message' => 'No hay un ciclo lectivo activo en este momento.'], 422);
+        }
+
+        $cursoActivo = $user->cursos()->wherePivot('estado', 'cursando')->first();
+        if ($cursoActivo) {
+            return response()->json([
+                'message' => "Ya te encuentras cursando el módulo {$cursoActivo->nombre} ({$cursoActivo->codigo}).",
+                'curso' => $cursoActivo
+            ], 422);
+        }
+
+        $nivelObjetivo = $user->nivel_actual ?? '101';
+
+        // Validar correlatividad si nivel > 101
+        if ((int)$nivelObjetivo > 101) {
+            $nivelesMap = [201 => '101', 301 => '201', 401 => '301', 501 => '401'];
+            $nivelPrevioReq = $nivelesMap[(int)$nivelObjetivo] ?? '101';
+
+            $aprobadoPrevio = $user->cursos()
+                ->where('nivel', $nivelPrevioReq)
+                ->wherePivot('estado', 'aprobado')
+                ->exists();
+
+            if (!$aprobadoPrevio) {
+                return response()->json([
+                    'message' => "Debes tener aprobado el Módulo {$nivelPrevioReq} para ingresar al Módulo {$nivelObjetivo}."
+                ], 422);
+            }
+        }
+
+        $nombres = [
+            '101' => 'Fundamentos de la Fe',
+            '201' => 'Historia del Cristianismo',
+            '301' => 'Hermenéutica Bíblica',
+            '401' => 'Teología Sistemática',
+            '501' => 'Liderazgo y Misiones',
+        ];
+
+        $master = ModuloMaster::firstOrCreate(
+            ['nivel' => $nivelObjetivo],
+            [
+                'nombre' => $nombres[$nivelObjetivo] ?? "Módulo {$nivelObjetivo}",
+                'descripcion' => "Contenido maestro para el Módulo {$nivelObjetivo}."
+            ]
+        );
+
+        $curso = Curso::firstOrCreate(
+            ['modulo_master_id' => $master->id, 'periodo_id' => $periodoActivo->id],
+            [
+                'nombre' => $nombres[$nivelObjetivo] ?? "Módulo {$nivelObjetivo}",
+                'nivel' => $nivelObjetivo,
+                'semestre' => "{$periodoActivo->nombre} - {$periodoActivo->año}",
+                'horario' => 'Domingos 08:00 - 12:00',
+                'descripcion' => "Instancia del Módulo {$nivelObjetivo} para el periodo {$periodoActivo->nombre} {$periodoActivo->año}.",
+                'codigo' => "{$nivelObjetivo}-{$periodoActivo->nombre}-{$periodoActivo->año}",
+                'modulo_master_id' => $master->id,
+                'periodo_id' => $periodoActivo->id,
+                'fecha_inicio' => $periodoActivo->fecha_inicio,
+                'fecha_fin' => $periodoActivo->fecha_fin,
+            ]
+        );
+
+        $user->cursos()->syncWithoutDetaching([
+            $curso->id => [
+                'estado' => 'cursando',
+                'nota_final' => 0,
+            ]
+        ]);
+
+        return response()->json([
+            'message' => "¡Inscripción confirmada exitosamente en el Módulo {$nivelObjetivo}!",
+            'curso' => $curso->load(['docente', 'docentes', 'periodo'])
+        ], 200);
     }
 }
