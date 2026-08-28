@@ -1,7 +1,30 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 const LandingPage = () => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    try {
+      const token = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+      if (token && storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    } catch (e) {
+      console.error('Error reading session data:', e);
+    }
+  }, []);
+
+  const scrollToSection = (id) => {
+    setIsMobileMenuOpen(false);
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="antialiased min-h-screen flex flex-col relative text-on-surface">
       <div className="ambient-glow w-full h-full fixed top-0 left-0 -z-10 pointer-events-none">
@@ -9,35 +32,119 @@ const LandingPage = () => {
       </div>
 
       {/* TopNavBar */}
-      <nav className="fixed top-0 w-full z-50 flex justify-between items-center px-4 md:px-16 py-4 max-w-7xl mx-auto left-0 right-0 bg-glass-fill backdrop-blur-xl border-b border-glass-border shadow-[0_0_20px_rgba(189,147,249,0.1)]">
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-full glass-panel flex items-center justify-center overflow-hidden border border-white/20 shadow-[0_0_15px_rgba(189,147,249,0.2)]">
-            {/* Logo sin filtros */}
-            <div className="flex items-center justify-center w-full h-full p-1">
-              <img
-                alt="Escuela Bíblica Filadelfia Logo"
-                className="h-10 w-10 object-contain"
-                src="/logo-ebd.png"
-              />
+      <nav className="fixed top-0 w-full z-50 px-4 md:px-16 py-4 max-w-7xl mx-auto left-0 right-0 bg-glass-fill backdrop-blur-xl border-b border-glass-border shadow-[0_0_20px_rgba(189,147,249,0.1)]">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-full glass-panel flex items-center justify-center overflow-hidden border border-white/20 shadow-[0_0_15px_rgba(189,147,249,0.2)]">
+              {/* Logo */}
+              <div className="flex items-center justify-center w-full h-full p-1">
+                <img
+                  alt="Escuela Bíblica Filadelfia Logo"
+                  className="h-10 w-10 object-contain"
+                  src="/logo-ebd.png"
+                />
+              </div>
+            </div>
+            <span className="font-headline-md text-2xl text-primary tracking-tight hidden md:block">Escuela Bíblica</span>
+          </div>
+          <div className="hidden md:flex gap-8 items-center">
+            <button onClick={() => scrollToSection('formacion')} className="font-label-md text-primary border-b-2 border-primary pb-1 hover:text-primary transition-all duration-300">Discipulado</button>
+            <button onClick={() => scrollToSection('formacion')} className="font-label-md text-on-surface-variant hover:text-primary transition-all duration-300">Aula</button>
+            <button onClick={() => scrollToSection('nosotros')} className="font-label-md text-on-surface-variant hover:text-primary transition-all duration-300">Nosotros</button>
+          </div>
+          <div className="flex items-center gap-4">
+            {user ? (
+              <Link
+                to="/dashboard"
+                className="glass-button-primary px-5 py-2 font-label-md text-void-black font-semibold hidden md:flex items-center gap-2 text-center rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all"
+              >
+                <span className="material-symbols-outlined text-lg">dashboard</span>
+                <span>Ir al Dashboard</span>
+              </Link>
+            ) : (
+              <Link
+                to="/login"
+                className="glass-button-primary px-6 py-2 font-label-md text-void-black font-semibold hidden md:block text-center rounded-xl hover:scale-105 transition-all"
+              >
+                Iniciar Sesión
+              </Link>
+            )}
+
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 rounded-xl bg-glass-fill border border-glass-border text-primary hover:text-glow-purple md:hidden flex items-center justify-center transition-colors"
+              aria-label="Abrir menú de navegación"
+            >
+              <span className="material-symbols-outlined text-2xl">
+                {isMobileMenuOpen ? 'close' : 'menu'}
+              </span>
+            </button>
+            <div className="hidden md:flex items-center gap-3">
+              {user ? (
+                <Link
+                  to="/dashboard"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-glass-fill border border-glass-border hover:border-primary/40 text-on-surface-variant hover:text-primary transition-all"
+                  title={`Sesión activa: ${user.name}`}
+                >
+                  <span className="material-symbols-outlined text-base text-primary">account_circle</span>
+                  <span className="text-xs font-bold truncate max-w-[120px]">{user.name.split(' ')[0]}</span>
+                </Link>
+              ) : (
+                <Link to="/login" className="text-on-surface-variant hover:text-primary transition-colors">
+                  <span className="material-symbols-outlined">account_circle</span>
+                </Link>
+              )}
             </div>
           </div>
-          <span className="font-headline-md text-2xl text-primary tracking-tight hidden md:block">Escuela Bíblica</span>
         </div>
-        <div className="hidden md:flex gap-8 items-center">
-          <a className="font-label-md text-primary border-b-2 border-primary pb-1 hover:text-primary transition-all duration-300" href="#">Discipulado</a>
-          <a className="font-label-md text-on-surface-variant hover:text-primary transition-all duration-300" href="#">Aula</a>
-          <a className="font-label-md text-on-surface-variant hover:text-primary transition-all duration-300" href="#">Nosotros</a>
-        </div>
-        <div className="flex items-center gap-4">
-          <Link to="/login" className="glass-button-primary px-6 py-2 font-label-md text-void-black font-semibold hidden md:block text-center">
-            Login
-          </Link>
-          <span className="material-symbols-outlined text-primary cursor-pointer hover:text-glow-purple md:hidden">menu</span>
-          <div className="hidden md:flex gap-2">
-            <span className="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-colors">school</span>
-            <span className="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-colors">account_circle</span>
+
+        {/* Mobile Dropdown Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden pt-4 pb-2 border-t border-glass-border/40 mt-4 flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+            {user && (
+              <div className="px-4 py-2 rounded-xl bg-primary/10 border border-primary/20 flex items-center gap-3">
+                <span className="material-symbols-outlined text-primary text-xl">account_circle</span>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs font-bold text-primary truncate">{user.name}</span>
+                  <span className="text-[10px] text-on-surface-variant uppercase tracking-wider capitalize">{user.role}</span>
+                </div>
+              </div>
+            )}
+            <button
+              onClick={() => scrollToSection('formacion')}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl bg-glass-fill text-left font-medium text-sm text-on-surface hover:text-primary hover:bg-primary/10 transition-colors"
+            >
+              <span className="material-symbols-outlined text-primary text-lg">auto_stories</span>
+              <span>Discipulado y Módulos</span>
+            </button>
+            <button
+              onClick={() => scrollToSection('nosotros')}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl bg-glass-fill text-left font-medium text-sm text-on-surface hover:text-primary hover:bg-primary/10 transition-colors"
+            >
+              <span className="material-symbols-outlined text-primary text-lg">groups</span>
+              <span>Sobre Nosotros</span>
+            </button>
+            {user ? (
+              <Link
+                to="/dashboard"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center justify-center gap-2 w-full py-3.5 px-4 rounded-xl glass-button-primary text-void-black font-bold text-sm text-center shadow-lg shadow-primary/20 mt-1"
+              >
+                <span className="material-symbols-outlined text-lg">dashboard</span>
+                <span>Ir al Dashboard</span>
+              </Link>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center justify-center gap-2 w-full py-3.5 px-4 rounded-xl glass-button-primary text-void-black font-bold text-sm text-center shadow-lg shadow-primary/20 mt-1"
+              >
+                <span className="material-symbols-outlined text-lg">login</span>
+                <span>Acceder al Aula Virtual</span>
+              </Link>
+            )}
           </div>
-        </div>
+        )}
       </nav>
 
       <main className="flex-grow pt-[100px] flex flex-col gap-20 pb-20">
@@ -55,14 +162,21 @@ const LandingPage = () => {
               Descubre un santuario digital para el aprendizaje bíblico profundo. Transforma tu camino espiritual a través de un estudio estructurado y profundo.
             </p>
             <div className="flex gap-4 flex-col sm:flex-row">
-              <button className="glass-button-primary px-8 py-3 font-label-md text-void-black font-bold tracking-wide">Comenzar Ahora</button>
-              <button className="glass-button-secondary px-8 py-3 font-label-md text-tertiary-fixed font-bold tracking-wide">Explorar Discipulado</button>
+              <Link
+                to={user ? "/dashboard" : "/login"}
+                className="glass-button-primary px-8 py-3 font-label-md text-void-black font-bold tracking-wide text-center rounded-xl hover:scale-105 transition-all"
+              >
+                {user ? "Ir a Mi Aula" : "Comenzar Ahora"}
+              </Link>
+              <button onClick={() => scrollToSection('formacion')} className="glass-button-secondary px-8 py-3 font-label-md text-tertiary-fixed font-bold tracking-wide rounded-xl">
+                Explorar Discipulado
+              </button>
             </div>
           </div>
         </section>
 
         {/* Modules Section (Bento Grid) */}
-        <section className="w-full max-w-7xl mx-auto px-4 md:px-16">
+        <section id="formacion" className="w-full max-w-7xl mx-auto px-4 md:px-16 scroll-mt-24">
           <div className="mb-12 text-center md:text-left">
             <h2 className="font-headline-lg text-3xl md:text-4xl text-on-surface">Nuestra Formación</h2>
             <p className="font-body-md text-base text-on-surface-variant mt-2">Un camino estructurado hacia la madurez espiritual.</p>
@@ -108,13 +222,18 @@ const LandingPage = () => {
         </section>
 
         {/* CTA Section */}
-        <section className="w-full max-w-7xl mx-auto px-4 md:px-16 my-12">
+        <section id="nosotros" className="w-full max-w-7xl mx-auto px-4 md:px-16 my-12 scroll-mt-24">
           <div className="glass-card rounded-xl p-8 text-center flex flex-col items-center gap-6 border-primary/30 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-tertiary/10 blur-xl z-0"></div>
             <div className="relative z-10">
               <h2 className="font-headline-lg text-3xl md:text-4xl text-on-surface mb-4">Únete a nuestro santuario virtual</h2>
               <p className="font-body-lg text-lg text-on-surface-variant mb-8 max-w-xl mx-auto">Adopta una experiencia educativa transformadora diseñada para el creyente moderno.</p>
-              <button className="glass-button-primary px-10 py-4 font-label-md text-void-black font-bold tracking-widest uppercase">Inscribirse Hoy</button>
+              <Link
+                to={user ? "/dashboard" : "/login"}
+                className="inline-block glass-button-primary px-10 py-4 font-label-md text-void-black font-bold tracking-widest uppercase rounded-xl hover:scale-105 transition-all"
+              >
+                {user ? "Ir al Dashboard" : "Inscribirse Hoy"}
+              </Link>
             </div>
           </div>
         </section>

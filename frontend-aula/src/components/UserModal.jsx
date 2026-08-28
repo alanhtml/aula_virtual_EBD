@@ -86,10 +86,10 @@ const UserModal = ({ isOpen, onClose, onSave, userToEdit, defaultRole = 'docente
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-void-black/60 backdrop-blur-sm">
-      <div className="glass-card w-full max-w-2xl p-8 rounded-2xl border border-glass-border shadow-2xl animate-in fade-in zoom-in duration-300">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-2xl font-headline-md text-primary">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-2 md:p-4 bg-void-black/60 backdrop-blur-sm">
+      <div className="glass-card w-full max-w-2xl p-6 md:p-8 rounded-2xl border border-glass-border shadow-2xl animate-in fade-in zoom-in duration-300 overflow-hidden flex flex-col max-h-[95vh]">
+        <div className="flex justify-between items-center mb-6 flex-shrink-0">
+          <h3 className="text-xl md:text-2xl font-headline-md text-primary">
             {userToEdit ? 'Editar Usuario' : 'Nuevo Usuario'}
           </h3>
           <button onClick={onClose} className="text-on-surface-variant hover:text-primary transition-colors">
@@ -97,7 +97,7 @@ const UserModal = ({ isOpen, onClose, onSave, userToEdit, defaultRole = 'docente
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 max-h-[70vh] overflow-y-auto px-1 scrollbar-thin scrollbar-thumb-primary/20">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 overflow-y-auto px-1 pr-2 scrollbar-thin scrollbar-thumb-primary/20 custom-scrollbar">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
             <div className="flex flex-col gap-1 md:col-span-2">

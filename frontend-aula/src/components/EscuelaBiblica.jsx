@@ -125,27 +125,27 @@ const EscuelaBiblica = () => {
   if (loading && clases.length === 0) return <EscuelaBiblicaSkeleton />;
 
   return (
-    <div className="flex flex-col gap-8 animate-in fade-in duration-500 pb-20">
-      <div className="flex justify-between items-center mt-8">
+    <div className="flex flex-col gap-8 animate-in fade-in duration-500 pb-20 p-2 md:p-0">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mt-8 gap-4">
         <div>
-          <h2 className="text-4xl font-headline-lg text-on-surface">Escuela Bíblica Dominical</h2>
-          <p className="text-on-surface-variant mt-2 text-lg">Formación espiritual por niveles de edad y etapas de crecimiento.</p>
+          <h2 className="text-3xl md:text-4xl font-headline-lg text-on-surface">Escuela Bíblica Dominical</h2>
+          <p className="text-on-surface-variant mt-2 text-base md:text-lg">Formación espiritual por niveles de edad y etapas de crecimiento.</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 w-full md:w-auto">
           {user.role === 'director' && (
             <button
               onClick={() => {
                 setClaseToEdit(null);
                 setIsModalOpen(true);
               }}
-              className="glass-button-primary px-6 py-3 rounded-2xl text-primary-fixed flex items-center gap-2"
+              className="glass-button-primary flex-1 md:flex-none px-6 py-3 rounded-2xl text-primary-fixed flex items-center justify-center gap-2"
             >
               <span className="material-symbols-outlined">add_box</span>
               Nuevo Espacio
             </button>
           )}
-          <div className="bg-primary/10 border border-primary/20 px-6 py-3 rounded-2xl">
-            <span className="text-primary font-bold text-sm uppercase tracking-widest">Sin Calificaciones</span>
+          <div className="bg-primary/10 border border-primary/20 px-4 md:px-6 py-3 rounded-2xl flex-1 md:flex-none text-center">
+            <span className="text-primary font-bold text-[10px] md:text-sm uppercase tracking-widest whitespace-nowrap">Sin Notas</span>
           </div>
         </div>
       </div>
@@ -206,31 +206,31 @@ const EscuelaBiblica = () => {
 
       {selectedClase && (
         <div className="glass-card rounded-3xl border border-glass-border overflow-hidden animate-in slide-in-from-bottom duration-500">
-          <div className="p-8 border-b border-glass-border bg-glass-fill/50 flex justify-between items-center">
-            <div className="flex items-center gap-6">
-              <div className="w-16 h-16 rounded-2xl bg-primary text-on-primary flex items-center justify-center text-3xl font-bold shadow-lg shadow-primary/30">
+          <div className="p-4 md:p-8 border-b border-glass-border bg-glass-fill/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div className="flex items-center gap-4 md:gap-6">
+              <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-primary text-on-primary flex items-center justify-center text-2xl md:text-3xl font-bold shadow-lg shadow-primary/30 flex-shrink-0">
                 {selectedClase.nombre.charAt(0)}
               </div>
               <div>
-                <h3 className="text-3xl font-bold text-on-surface">Lista de Clase: {selectedClase.nombre}</h3>
-                <p className="text-on-surface-variant">{selectedClase.rango_edad} • Docente Asignado: {selectedClase.docente?.name || 'Por asignar'}</p>
+                <h3 className="text-xl md:text-3xl font-bold text-on-surface line-clamp-1">Lista: {selectedClase.nombre}</h3>
+                <p className="text-xs md:text-base text-on-surface-variant">{selectedClase.rango_edad} • Docente: {selectedClase.docente?.name || 'Por asignar'}</p>
               </div>
             </div>
 
             {(user.role === 'docentes' || user.role === 'director') && (
               <button
                 onClick={() => setShowAddEstudiante(!showAddEstudiante)}
-                className="glass-button-primary px-8 py-3 rounded-2xl text-primary-fixed flex items-center gap-2"
+                className="glass-button-primary w-full md:w-auto px-6 py-3 rounded-2xl text-primary-fixed flex items-center justify-center gap-2"
               >
                 <span className="material-symbols-outlined">person_add</span>
-                Registrar Estudiante
+                Registrar Alumno
               </button>
             )}
           </div>
 
           <div className="p-8">
             {showAddEstudiante && (
-              <form onSubmit={handleAddEstudiante} className="mb-8 p-6 glass-panel rounded-2xl border border-primary/20 flex gap-4 animate-in fade-in zoom-in duration-300">
+              <form onSubmit={handleAddEstudiante} className="mb-8 p-4 md:p-6 glass-panel rounded-2xl border border-primary/20 flex flex-col md:flex-row gap-4 animate-in fade-in zoom-in duration-300">
                 <div className="flex-1">
                   <label className="text-[10px] font-black uppercase tracking-widest text-primary ml-2 mb-2 block">Nombre del Alumno</label>
                   <input
@@ -241,7 +241,7 @@ const EscuelaBiblica = () => {
                     onChange={(e) => setNewEstudiante({...newEstudiante, nombre_estudiante: e.target.value})}
                   />
                 </div>
-                <div className="w-32">
+                <div className="w-full md:w-32">
                   <label className="text-[10px] font-black uppercase tracking-widest text-primary ml-2 mb-2 block">Edad</label>
                   <input
                     type="number"
@@ -252,8 +252,8 @@ const EscuelaBiblica = () => {
                   />
                 </div>
                 <div className="flex items-end">
-                  <button type="submit" className="bg-primary text-on-primary h-[50px] px-8 rounded-xl font-bold hover:scale-105 transition-transform active:scale-95 shadow-lg shadow-primary/20">
-                    Añadir a Lista
+                  <button type="submit" className="w-full bg-primary text-on-primary h-[50px] px-8 rounded-xl font-bold hover:scale-105 transition-transform active:scale-95 shadow-lg shadow-primary/20">
+                    Añadir
                   </button>
                 </div>
               </form>

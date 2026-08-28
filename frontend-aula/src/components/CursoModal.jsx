@@ -143,21 +143,21 @@ const CursoModal = ({ isOpen, onClose, onSave, cursoToEdit, añoActual }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-void-black/60 backdrop-blur-sm">
-      <div className="glass-card w-full max-w-2xl p-8 rounded-2xl border border-glass-border shadow-2xl animate-in fade-in zoom-in duration-300">
-        <div className="flex justify-between items-center mb-6">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-2 md:p-4 bg-void-black/60 backdrop-blur-sm">
+      <div className="glass-card w-full max-w-2xl p-6 md:p-8 rounded-2xl border border-glass-border shadow-2xl animate-in fade-in zoom-in duration-300 flex flex-col max-h-[95vh] overflow-hidden">
+        <div className="flex justify-between items-center mb-6 flex-shrink-0">
           <div className="flex flex-col">
-            <h3 className="text-2xl font-headline-md text-primary">
-              {cursoToEdit ? 'Editar Módulo' : 'Nueva Apertura de Módulo'}
+            <h3 className="text-xl md:text-2xl font-headline-md text-primary">
+              {cursoToEdit ? 'Editar Módulo' : 'Nueva Apertura'}
             </h3>
-            <p className="text-[10px] text-on-surface-variant uppercase tracking-[0.2em] mt-1">Configuración del Ciclo Académico</p>
+            <p className="text-[9px] text-on-surface-variant uppercase tracking-[0.2em] mt-1">Configuración Académica</p>
           </div>
           <button onClick={onClose} className="text-on-surface-variant hover:text-primary transition-colors">
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 overflow-y-auto pr-2 custom-scrollbar">
           <div className="flex flex-col gap-1 md:col-span-2">
             <label className="text-[10px] font-black text-primary/70 uppercase tracking-widest ml-1">Nombre del Módulo</label>
             <input

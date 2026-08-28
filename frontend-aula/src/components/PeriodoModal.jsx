@@ -62,11 +62,11 @@ const PeriodoModal = ({ isOpen, onClose, añoActual }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-void-black/80 backdrop-blur-md animate-in fade-in duration-300">
-      <div className="glass-card w-full max-w-2xl rounded-3xl border border-glass-border shadow-2xl overflow-hidden animate-in zoom-in duration-300">
-        <div className="p-8 border-b border-glass-border bg-glass-fill/50 flex justify-between items-center">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 md:p-4 bg-void-black/80 backdrop-blur-md animate-in fade-in duration-300">
+      <div className="glass-card w-full max-w-2xl rounded-3xl border border-glass-border shadow-2xl overflow-hidden animate-in zoom-in duration-300 flex flex-col max-h-[95vh]">
+        <div className="p-6 md:p-8 border-b border-glass-border bg-glass-fill/50 flex justify-between items-center flex-shrink-0">
           <div>
-            <h3 className="text-2xl font-bold text-on-surface">Configuraciones de Periodos</h3>
+            <h3 className="text-xl md:text-2xl font-bold text-on-surface">Configuraciones de Periodos</h3>
             <p className="text-[10px] text-primary font-black uppercase tracking-[0.2em] mt-1">Ciclo Lectivo {añoActual}</p>
           </div>
           <button onClick={onClose} className="text-on-surface-variant hover:text-primary transition-colors">
@@ -74,7 +74,7 @@ const PeriodoModal = ({ isOpen, onClose, añoActual }) => {
           </button>
         </div>
 
-        <div className="p-8 flex flex-col gap-6">
+        <div className="p-6 md:p-8 flex flex-col gap-6 overflow-y-auto custom-scrollbar">
           {loading ? (
             <div className="py-20 flex justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>

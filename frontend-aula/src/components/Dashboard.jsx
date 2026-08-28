@@ -36,8 +36,9 @@ const Dashboard = () => {
   const [isPeriodoModalOpen, setIsPeriodoModalOpen] = useState(false);
   const [selectedPeriodo, setSelectedPeriodo] = useState(null);
   const [userTab, setUserTab] = useState('estudiantes'); // 'personal' o 'estudiantes'
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [cursoFilter, setCursoFilter] = useState({
-    periodo: 'PI',
+    periodo: 'ALL',
     año: new Date().getFullYear().toString()
   });
 
@@ -367,8 +368,16 @@ const Dashboard = () => {
       {/* Ambient Background */}
       <div className="fixed top-0 left-0 w-screen h-screen -z-10 pointer-events-none bg-[radial-gradient(circle_at_20%_30%,rgba(215,186,255,0.15)_0%,transparent_50%),radial-gradient(circle_at_80%_70%,rgba(233,196,0,0.1)_0%,transparent_50%)]"></div>
 
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-void-black/80 backdrop-blur-sm z-[45] md:hidden animate-in fade-in duration-300"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* SideNavBar */}
-      <aside className="fixed left-0 top-0 h-full flex flex-col w-64 border-r border-glass-border shadow-[0_0_20px_rgba(189,147,249,0.1)] bg-glass-fill backdrop-blur-[20px] z-50 md:flex hidden">
+      <aside className={`fixed left-0 top-0 h-full flex flex-col w-64 border-r border-glass-border shadow-[0_0_20px_rgba(189,147,249,0.1)] bg-glass-fill backdrop-blur-[20px] z-50 transition-transform duration-300 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
         <div className="p-6 flex flex-col items-center border-b border-glass-border">
           <div className="w-24 h-24 mb-4 rounded-full overflow-hidden glass-panel flex items-center justify-center border border-white/10 shadow-[0_0_20px_rgba(189,147,249,0.2)]">
             <div className="flex items-center justify-center w-full h-full p-2">
@@ -399,6 +408,7 @@ const Dashboard = () => {
               <li key={index}>
                 <Link
                   to={item.path === '' ? '/dashboard' : `/dashboard/${item.path}`}
+                  onClick={() => setIsMobileMenuOpen(false)}
                   className={`w-full flex items-center gap-4 px-6 py-3 font-medium transition-all duration-300 scale-95 active:scale-90 text-sm ${
                     (item.path === '' && activeView === 'overview') || (item.path !== '' && activeView === item.path)
                     ? 'bg-primary/10 text-primary border-r-4 border-primary shadow-[inset_-10px_0_20px_-10px_rgba(189,147,249,0.3)]'
@@ -414,7 +424,10 @@ const Dashboard = () => {
         </nav>
         <div className="mt-auto border-t border-glass-border p-4">
           <button
-            onClick={handleLogout}
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              handleLogout();
+            }}
             className="w-full flex items-center gap-4 px-4 py-2 text-on-surface-variant font-medium hover:bg-glass-fill hover:text-error transition-all duration-300 scale-95 active:scale-90 text-sm rounded-md"
           >
             <span className="material-symbols-outlined">logout</span>
@@ -428,7 +441,10 @@ const Dashboard = () => {
         {/* TopNavBar */}
         <header className="fixed top-0 right-0 left-0 md:left-64 flex justify-between items-center px-6 z-40 bg-glass-fill backdrop-blur-[20px] w-full md:w-[calc(100%-16rem)] h-16 border-b border-glass-border shadow-sm">
           <div className="flex items-center gap-4">
-            <button className="md:hidden text-on-surface-variant hover:text-primary transition-colors">
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="md:hidden text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center p-2 rounded-lg bg-glass-fill"
+            >
               <span className="material-symbols-outlined">menu</span>
             </button>
             <span className="font-headline-md text-xl font-semibold text-primary hidden md:block tracking-tight">Escuela Bíblica</span>
@@ -573,18 +589,18 @@ const Dashboard = () => {
                 </div>
 
                 {/* Tabs de Navegación de Usuarios */}
-                <div className="flex p-1 bg-glass-fill rounded-2xl border border-glass-border w-fit">
+                <div className="flex p-1 bg-glass-fill rounded-2xl border border-glass-border w-full md:w-fit overflow-x-auto scrollbar-hide whitespace-nowrap">
                   <button
                     onClick={() => setUserTab('estudiantes')}
-                    className={`flex items-center gap-2 px-6 py-2 rounded-xl transition-all duration-300 font-bold text-sm ${
+                    className={`flex items-center gap-2 px-4 md:px-6 py-2 rounded-xl transition-all duration-300 font-bold text-xs md:text-sm ${
                       userTab === 'estudiantes'
                       ? 'bg-primary text-on-primary shadow-lg shadow-primary/30 scale-100'
                       : 'text-on-surface-variant hover:text-primary scale-95'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-lg">school</span>
-                    Lista de Estudiantes
-                    <span className={`ml-2 px-2 py-0.5 rounded-full text-[10px] ${userTab === 'estudiantes' ? 'bg-on-primary/20' : 'bg-glass-fill'}`}>
+                    <span className="material-symbols-outlined text-base md:text-lg">school</span>
+                    Estudiantes
+                    <span className={`ml-1 md:ml-2 px-2 py-0.5 rounded-full text-[9px] md:text-[10px] ${userTab === 'estudiantes' ? 'bg-on-primary/20' : 'bg-glass-fill'}`}>
                       {loading ? '...' : users.filter(u => u.role === 'estudiantes').length}
                     </span>
                   </button>
@@ -592,15 +608,15 @@ const Dashboard = () => {
                   {user.role !== 'docentes' && (
                     <button
                       onClick={() => setUserTab('personal')}
-                      className={`flex items-center gap-2 px-6 py-2 rounded-xl transition-all duration-300 font-bold text-sm ${
+                      className={`flex items-center gap-2 px-4 md:px-6 py-2 rounded-xl transition-all duration-300 font-bold text-xs md:text-sm ${
                         userTab === 'personal'
                         ? 'bg-primary text-on-primary shadow-lg shadow-primary/30 scale-100'
                         : 'text-on-surface-variant hover:text-primary scale-95'
                       }`}
                     >
-                      <span className="material-symbols-outlined text-lg">admin_panel_settings</span>
-                      Personal Administrativo
-                      <span className={`ml-2 px-2 py-0.5 rounded-full text-[10px] ${userTab === 'personal' ? 'bg-on-primary/20' : 'bg-glass-fill'}`}>
+                      <span className="material-symbols-outlined text-base md:text-lg">admin_panel_settings</span>
+                      Personal
+                      <span className={`ml-1 md:ml-2 px-2 py-0.5 rounded-full text-[9px] md:text-[10px] ${userTab === 'personal' ? 'bg-on-primary/20' : 'bg-glass-fill'}`}>
                         {loading ? '...' : users.filter(u => u.role !== 'estudiantes').length}
                       </span>
                     </button>
@@ -608,16 +624,16 @@ const Dashboard = () => {
                 </div>
 
                 {loading ? <UsersTableSkeleton /> : (
-                  <div className="glass-card rounded-2xl overflow-hidden border border-glass-border shadow-2xl">
-                    <table className="w-full text-left border-collapse">
+                  <div className="glass-card rounded-2xl border border-glass-border shadow-2xl overflow-x-auto overflow-y-hidden">
+                    <table className="w-full text-left border-collapse min-w-[600px] md:min-w-full">
                       <thead className="bg-glass-fill/80 backdrop-blur-md border-b border-glass-border">
                         <tr>
-                          <th className="py-6 px-8 text-[10px] text-primary font-black uppercase tracking-[0.3em]">Identidad</th>
-                          <th className="py-6 px-8 text-[10px] text-on-surface-variant font-black uppercase tracking-[0.3em]">Acceso</th>
+                          <th className="py-4 md:py-6 px-4 md:px-8 text-[9px] md:text-[10px] text-primary font-black uppercase tracking-[0.2em] md:tracking-[0.3em]">Identidad</th>
+                          <th className="py-4 md:py-6 px-4 md:px-8 text-[9px] md:text-[10px] text-on-surface-variant font-black uppercase tracking-[0.2em] md:tracking-[0.3em]">Acceso</th>
                           {userTab === 'personal' && (
-                            <th className="py-6 px-8 text-[10px] text-on-surface-variant font-black uppercase tracking-[0.3em]">Cargo Institucional</th>
+                            <th className="py-4 md:py-6 px-4 md:px-8 text-[9px] md:text-[10px] text-on-surface-variant font-black uppercase tracking-[0.2em] md:tracking-[0.3em]">Cargo</th>
                           )}
-                          <th className="py-6 px-8 text-[10px] text-on-surface-variant font-black uppercase tracking-[0.3em] text-right">Acciones</th>
+                          <th className="py-4 md:py-6 px-4 md:px-8 text-[9px] md:text-[10px] text-on-surface-variant font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-right">Acciones</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-glass-border/20">
@@ -625,49 +641,49 @@ const Dashboard = () => {
                           .filter(u => userTab === 'personal' ? u.role !== 'estudiantes' : u.role === 'estudiantes')
                           .map((u) => (
                           <tr key={u.id} className="hover:bg-primary/[0.03] transition-all duration-500 group">
-                            <td className="py-5 px-8">
-                              <div className="flex items-center gap-5">
-                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/30 to-transparent border border-primary/20 flex items-center justify-center text-primary text-xl font-headline-md shadow-lg group-hover:scale-110 transition-transform">
+                            <td className="py-4 md:py-5 px-4 md:px-8">
+                              <div className="flex items-center gap-3 md:gap-5">
+                                <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-gradient-to-br from-primary/30 to-transparent border border-primary/20 flex items-center justify-center text-primary text-lg md:text-xl font-headline-md shadow-lg group-hover:scale-110 transition-transform flex-shrink-0">
                                   {u.name.charAt(0)}
                                 </div>
-                                <div className="flex flex-col gap-0.5">
-                                  <span className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">{u.name}</span>
-                                  <span className="text-[10px] text-on-surface-variant/60 tracking-wider font-medium">{u.email}</span>
+                                <div className="flex flex-col gap-0.5 min-w-0">
+                                  <span className="text-xs md:text-sm font-bold text-on-surface group-hover:text-primary transition-colors truncate">{u.name}</span>
+                                  <span className="text-[9px] md:text-[10px] text-on-surface-variant/60 tracking-wider font-medium truncate">{u.email}</span>
                                 </div>
                               </div>
                             </td>
-                            <td className="py-5 px-8">
-                              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-void-black/40 border border-glass-border text-[11px] text-on-surface-variant group-hover:border-primary/30 transition-colors">
-                                <span className="material-symbols-outlined text-[16px] text-primary/70">key</span>
+                            <td className="py-4 md:py-5 px-4 md:px-8">
+                              <div className="inline-flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-xl bg-void-black/40 border border-glass-border text-[10px] md:text-[11px] text-on-surface-variant group-hover:border-primary/30 transition-colors">
+                                <span className="material-symbols-outlined text-[14px] md:text-[16px] text-primary/70">key</span>
                                 {u.username}
                               </div>
                             </td>
                             {userTab === 'personal' && (
-                              <td className="py-5 px-8">
-                                <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border ${
-                                  u.role === 'director' ? 'bg-primary/10 text-primary border-primary/30 shadow-[0_0_15px_rgba(189,147,249,0.1)]' :
-                                  u.role === 'docentes' ? 'bg-secondary-fixed/10 text-secondary-fixed border-secondary-fixed/30 shadow-[0_0_15px_rgba(255,215,0,0.05)]' :
+                              <td className="py-4 md:py-5 px-4 md:px-8">
+                                <span className={`px-3 md:px-4 py-1 md:py-1.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest border ${
+                                  u.role === 'director' ? 'bg-primary/10 text-primary border-primary/30' :
+                                  u.role === 'docentes' ? 'bg-secondary-fixed/10 text-secondary-fixed border-secondary-fixed/30' :
                                   'bg-tertiary/10 text-tertiary border-tertiary/30'
                                 }`}>
                                   {u.role === 'docentes' ? 'Docente' : u.role === 'director' ? 'Director' : 'Secretaría'}
                                 </span>
                               </td>
                             )}
-                            <td className="py-5 px-8 text-right">
-                              <div className="flex justify-end gap-3">
+                            <td className="py-4 md:py-5 px-4 md:px-8 text-right">
+                              <div className="flex justify-end gap-2 md:gap-3">
                                 <button
                                   onClick={() => openEditUserModal(u)}
-                                  className="w-10 h-10 rounded-xl flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-primary/10 transition-all border border-glass-border hover:border-primary/40 shadow-sm"
+                                  className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-primary/10 transition-all border border-glass-border hover:border-primary/40 shadow-sm"
                                   title="Editar"
                                 >
-                                  <span className="material-symbols-outlined text-xl">edit_square</span>
+                                  <span className="material-symbols-outlined text-lg md:text-xl">edit_square</span>
                                 </button>
                                 <button
                                   onClick={() => handleDeleteUser(u.id)}
-                                  className="w-10 h-10 rounded-xl flex items-center justify-center text-on-surface-variant hover:text-error hover:bg-error/10 transition-all border border-glass-border hover:border-error/40 shadow-sm"
+                                  className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center text-on-surface-variant hover:text-error hover:bg-error/10 transition-all border border-glass-border hover:border-error/40 shadow-sm"
                                   title="Eliminar"
                                 >
-                                  <span className="material-symbols-outlined text-xl">delete</span>
+                                  <span className="material-symbols-outlined text-lg md:text-xl">delete</span>
                                 </button>
                               </div>
                             </td>
@@ -705,6 +721,7 @@ const Dashboard = () => {
                         onChange={(e) => setCursoFilter({...cursoFilter, periodo: e.target.value})}
                         className="glass-input px-4 py-2 rounded-xl text-xs font-bold border-primary/20"
                       >
+                        <option value="ALL">Todos los Periodos</option>
                         <option value="PI">Periodo I</option>
                         <option value="PII">Periodo II</option>
                         <option value="PIII">Periodo III</option>
@@ -729,90 +746,82 @@ const Dashboard = () => {
                 </div>
 
                 {loading ? <CourseGridSkeleton /> : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {cursos
-                      .filter(c => {
-                        if (user.role === 'docentes') return true; // El docente ve todos sus cursos asignados sin importar el filtro de año
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {cursos
+                        .filter(c => {
+                          if (user.role === 'director' || user.role === 'secretaria') {
+                            if (cursoFilter.periodo === 'ALL') return true;
+                            return c.codigo.includes(`${cursoFilter.periodo}-${cursoFilter.año}`) || c.codigo.includes(`MOD-${cursoFilter.periodo}-${cursoFilter.año}`);
+                          }
+                          return true;
+                        })
+                        .map((curso) => (
+                        <div key={curso.id} className="glass-card p-6 rounded-2xl flex flex-col gap-4 border border-glass-border hover:border-primary/50 transition-all">
+                          <div className="flex justify-between items-start">
+                            <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold uppercase tracking-widest">
+                              Nivel {curso.nivel}
+                            </span>
+                            <span className="text-xs text-on-surface-variant">{curso.codigo}</span>
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold text-on-surface mb-1">{curso.nombre}</h3>
+                            <p className="text-sm text-on-surface-variant line-clamp-2">{curso.descripcion || 'Sin descripción disponible.'}</p>
+                          </div>
+                          <div className="flex flex-col gap-2 border-t border-glass-border pt-4">
+                            <div className="flex items-center gap-2 text-sm text-on-surface-variant">
+                              <span className="material-symbols-outlined text-sm">calendar_month</span>
+                              <span>{curso.horario} - {curso.semestre}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-on-surface-variant">
+                              <span className="material-symbols-outlined text-sm">person</span>
+                              <span>Docente: {curso.docente ? curso.docente.name : 'No asignado'}</span>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 mt-2">
+                            <button onClick={() => navigate(`/modulo/${curso.id}`)} className="flex-1 py-2 rounded-lg bg-primary/20 text-primary text-xs font-bold hover:bg-primary/30 transition-colors">Aula</button>
+                            {user.role === 'docentes' && (
+                              <button onClick={() => { setCursoForAsistencia(curso); setIsAsistenciaModalOpen(true); }} className="px-3 py-2 rounded-lg bg-secondary-fixed/20 text-secondary-fixed border border-secondary-fixed/30 text-xs font-bold hover:bg-secondary-fixed/30 transition-colors flex items-center gap-1">
+                                <span className="material-symbols-outlined text-sm">how_to_reg</span>
+                              </button>
+                            )}
+                            <button onClick={() => openInscripcionModal(curso)} className="px-3 py-2 rounded-lg bg-glass-fill border border-glass-border text-xs font-medium hover:text-primary transition-colors flex items-center gap-1"><span className="material-symbols-outlined text-sm">person_add</span></button>
+                            <button onClick={() => openEditCursoModal(curso)} className="px-3 py-2 rounded-lg bg-glass-fill border border-glass-border text-xs font-medium hover:text-primary transition-colors"><span className="material-symbols-outlined text-sm">edit</span></button>
+                            <button onClick={() => handleDeleteCurso(curso.id)} className="px-3 py-2 rounded-lg bg-glass-fill border border-glass-border text-error hover:bg-error/10 transition-colors"><span className="material-symbols-outlined text-sm">delete</span></button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {cursos.length > 0 && (user.role === 'director' || user.role === 'secretaria') && (
+                      cursos.filter(c => {
+                        if (cursoFilter.periodo === 'ALL') return true;
                         return c.codigo.includes(`${cursoFilter.periodo}-${cursoFilter.año}`) || c.codigo.includes(`MOD-${cursoFilter.periodo}-${cursoFilter.año}`);
-                      })
-                      .map((curso) => (
-                      <div key={curso.id} className="glass-card p-6 rounded-2xl flex flex-col gap-4 border border-glass-border hover:border-primary/50 transition-all">
-                        <div className="flex justify-between items-start">
-                          <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold uppercase tracking-widest">
-                            Nivel {curso.nivel}
-                          </span>
-                          <span className="text-xs text-on-surface-variant">{curso.codigo}</span>
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-bold text-on-surface mb-1">{curso.nombre}</h3>
-                          <p className="text-sm text-on-surface-variant line-clamp-2">{curso.descripcion || 'Sin descripción disponible.'}</p>
-                        </div>
-                        <div className="flex flex-col gap-2 border-t border-glass-border pt-4">
-                          <div className="flex items-center gap-2 text-sm text-on-surface-variant">
-                            <span className="material-symbols-outlined text-sm">calendar_month</span>
-                            <span>{curso.horario} - {curso.semestre}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-on-surface-variant">
-                            <span className="material-symbols-outlined text-sm">person</span>
-                            <span>Docente: {curso.docente ? curso.docente.name : 'No asignado'}</span>
-                          </div>
-                        </div>
-                        <div className="flex gap-2 mt-2">
-                          <button
-                            onClick={() => navigate(`/modulo/${curso.id}`)}
-                            className="flex-1 py-2 rounded-lg bg-primary/20 text-primary text-xs font-bold hover:bg-primary/30 transition-colors"
-                          >
-                            Aula
-                          </button>
-                          {user.role === 'docentes' && (
-                            <button
-                              onClick={() => {
-                                setCursoForAsistencia(curso);
-                                setIsAsistenciaModalOpen(true);
-                              }}
-                              className="px-3 py-2 rounded-lg bg-secondary-fixed/20 text-secondary-fixed border border-secondary-fixed/30 text-xs font-bold hover:bg-secondary-fixed/30 transition-colors flex items-center gap-1"
-                              title="Pasar Asistencia"
-                            >
-                              <span className="material-symbols-outlined text-sm">how_to_reg</span>
-                              Lista
-                            </button>
-                          )}
-                          {user.role === 'docentes' && (
-                            <button
-                              onClick={() => {
-                                setCursoForCalificacion(curso);
-                                setIsCalificacionFinalModalOpen(true);
-                              }}
-                              className="px-3 py-2 rounded-lg bg-primary/20 text-primary border border-primary/30 text-xs font-bold hover:bg-primary/30 transition-colors flex items-center gap-1"
-                              title="Calificaciones Finales"
-                            >
-                              <span className="material-symbols-outlined text-sm">grade</span>
-                              Notas
-                            </button>
-                          )}
-                          <button
-                            onClick={() => openInscripcionModal(curso)}
-                            className="px-3 py-2 rounded-lg bg-glass-fill border border-glass-border text-xs font-medium hover:text-primary transition-colors flex items-center gap-1"
-                            title="Inscribir Estudiantes"
-                          >
-                            <span className="material-symbols-outlined text-sm">person_add</span>
-                          </button>
-                          <button
-                            onClick={() => openEditCursoModal(curso)}
-                            className="px-3 py-2 rounded-lg bg-glass-fill border border-glass-border text-xs font-medium hover:text-primary transition-colors"
-                          >
-                            <span className="material-symbols-outlined text-sm">edit</span>
-                          </button>
-                          <button
-                            onClick={() => handleDeleteCurso(curso.id)}
-                            className="px-3 py-2 rounded-lg bg-glass-fill border border-glass-border text-error hover:bg-error/10 transition-colors"
-                          >
-                            <span className="material-symbols-outlined text-sm">delete</span>
-                          </button>
-                        </div>
+                      }).length === 0
+                    ) && (
+                      <div className="py-20 flex flex-col items-center justify-center text-on-surface-variant/40 bg-glass-fill rounded-3xl border border-glass-border border-dashed w-full col-span-full">
+                        <span className="material-symbols-outlined text-6xl mb-4">manage_search</span>
+                        <p className="text-lg font-bold">Módulos no encontrados en este periodo</p>
+                        <p className="text-sm mb-6 text-center px-4">
+                          El sistema tiene <b>{cursos.length} cursos</b> registrados, pero ninguno coincide con "{cursoFilter.periodo} - {cursoFilter.año}".
+                        </p>
+                        <button
+                          onClick={() => setCursoFilter({ ...cursoFilter, periodo: 'ALL' })}
+                          className="px-8 py-3 rounded-xl bg-primary text-on-primary text-sm font-bold shadow-lg shadow-primary/30 hover:scale-105 transition-transform"
+                        >
+                          Ver los {cursos.length} cursos existentes
+                        </button>
                       </div>
-                    ))}
-                  </div>
+                    )}
+
+                    {cursos.length === 0 && (
+                      <div className="py-20 flex flex-col items-center justify-center text-on-surface-variant/40 bg-glass-fill rounded-3xl border border-glass-border border-dashed w-full col-span-full">
+                        <span className="material-symbols-outlined text-6xl mb-4">inventory_2</span>
+                        <p className="text-lg font-bold">Base de datos vacía</p>
+                        <p className="text-sm mb-6 text-center px-4">Aún no se han creado cursos en el sistema.</p>
+                      </div>
+                    )}
+                  </>
                 )}
               </section>
             } />

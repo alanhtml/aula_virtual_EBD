@@ -32,5 +32,5 @@ RUN composer install --no-dev --optimize-autoloader
 # Ajustar permisos
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
-# Comando para iniciar Laravel y sembrar datos si es necesario
-CMD php artisan migrate --force && php artisan db:seed --force && php artisan serve --host=0.0.0.0 --port=$PORT
+# Comando para iniciar Laravel (ejecuta migraciones y levanta el servidor)
+CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT

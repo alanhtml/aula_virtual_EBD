@@ -14,11 +14,19 @@ class CursoController extends Controller
         $query = Curso::with(['docente', 'docentes']);
 
         if ($user->role === 'docentes') {
-            $query->where('docente_id', $user->id)
-                  ->orWhereHas('docentes', function($q) use ($user) {
-                      $q->where('users.id', $user->id);
+            $query->where(function($q) use ($user) {
+                $q->where('docente_id', $user->id)
+                  ->orWhereHas('docentes', function($sq) use ($user) {
+                      $sq->where('users.id', $user->id);
                   });
+            });
+        } elseif ($user->role === 'estudiantes') {
+            $query->whereHas('estudiantes', function($q) use ($user) {
+                $q->where('users.id', $user->id);
+            });
         }
+
+        // Director y Secretaria ven todos (no aplicamos filtro)
 
         return response()->json($query->get());
     }
