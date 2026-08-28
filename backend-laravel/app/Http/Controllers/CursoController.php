@@ -169,9 +169,26 @@ class CursoController extends Controller
             'estado' => $validated['estado'],
         ]);
 
+        $estudiante = \App\Models\User::find($validated['user_id']);
+
+        // Lógica de Promoción Automática: Si aprueba con >= 61, sube su nivel_actual
+        if ($validated['estado'] === 'aprobado' && $validated['nota_final'] >= 61) {
+            $niveles = ['101', '201', '301', '401', '501'];
+            $posActual = array_search($curso->nivel, $niveles);
+
+            if ($posActual !== false && isset($niveles[$posActual + 1])) {
+                $siguienteNivel = $niveles[$posActual + 1];
+                // Solo subimos el nivel si el siguiente es mayor al que ya tiene
+                if ((int)$siguienteNivel > (int)$estudiante->nivel_actual) {
+                    $estudiante->update(['nivel_actual' => $siguienteNivel]);
+                }
+            }
+        }
+
         return response()->json([
-            'message' => 'Calificación registrada correctamente',
-            'estudiante' => $curso->estudiantes()->where('users.id', $validated['user_id'])->first()
+            'message' => 'Calificación registrada y nivel actualizado si corresponde',
+            'estudiante' => $curso->estudiantes()->where('users.id', $validated['user_id'])->first(),
+            'nivel_actual_alumno' => $estudiante->nivel_actual
         ]);
     }
 
