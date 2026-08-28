@@ -239,7 +239,7 @@ class CursoController extends Controller
     public function aperturaMasiva(Request $request)
     {
         $validated = $request->validate([
-            'periodo' => 'required|in:PI,PII,PIIII',
+            'periodo' => 'required|in:PI,PII,PIII',
             'año' => 'required|integer|min:2024|max:2099',
         ]);
 
