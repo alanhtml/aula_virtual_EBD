@@ -23,6 +23,7 @@ Route::get('/mensaje', function () {
 });
 
 Route::post('/login', [AuthController::class, 'login']);
+Route::get('/cursos/catalog', [CursoController::class, 'catalog']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'me']);

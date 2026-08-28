@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import api from '../api/axios';
 
 const LandingPage = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [cursos, setCursos] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     try {
@@ -15,7 +18,30 @@ const LandingPage = () => {
     } catch (e) {
       console.error('Error reading session data:', e);
     }
+    fetchCursos();
   }, []);
+
+  const fetchCursos = async () => {
+    try {
+      const response = await api.get('/cursos/catalog');
+      setCursos(response.data);
+    } catch (error) {
+      console.error('Error fetching courses catalog:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getIconForNivel = (nivel) => {
+    switch (nivel) {
+      case '101': return 'auto_stories';
+      case '201': return 'psychology';
+      case '301': return 'groups';
+      case '401': return 'menu_book';
+      case '501': return 'public';
+      default: return 'school';
+    }
+  };
 
   const scrollToSection = (id) => {
     setIsMobileMenuOpen(false);
@@ -45,7 +71,7 @@ const LandingPage = () => {
                 />
               </div>
             </div>
-            <span className="font-headline-md text-2xl text-primary tracking-tight hidden md:block">Escuela Bíblica</span>
+            <span className="font-headline-md text-2xl text-primary tracking-tight hidden md:block">EBD Filadelfia</span>
           </div>
           <div className="hidden md:flex gap-8 items-center">
             <button onClick={() => scrollToSection('formacion')} className="font-label-md text-primary border-b-2 border-primary pb-1 hover:text-primary transition-all duration-300">Discipulado</button>
@@ -181,44 +207,36 @@ const LandingPage = () => {
             <h2 className="font-headline-lg text-3xl md:text-4xl text-on-surface">Nuestra Formación</h2>
             <p className="font-body-md text-base text-on-surface-variant mt-2">Un camino estructurado hacia la madurez espiritual.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Mod 101 */}
-            <div className="glass-card rounded-lg p-6 flex flex-col gap-4 group hover:shadow-[0_0_30px_rgba(189,147,249,0.15)] transition-all duration-500">
-              <div className="flex justify-between items-start">
-                <span className="font-label-sm text-xs text-tertiary px-3 py-1 rounded-full bg-white/5 border border-tertiary/30">Módulo 101</span>
-                <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">auto_stories</span>
-              </div>
-              <h3 className="font-headline-md text-2xl text-on-surface">Fundamentos de la Fe</h3>
-              <p className="font-body-md text-base text-on-surface-variant flex-grow">Establece las bases sólidas de tu creencia a través del estudio profundo de las escrituras fundamentales.</p>
-              <div className="w-full bg-surface-container h-1 rounded-full mt-4 overflow-hidden">
-                <div className="bg-primary h-full w-[20%]"></div>
-              </div>
+
+          {loading ? (
+            <div className="flex justify-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
             </div>
-            {/* Mod 201 */}
-            <div className="glass-card rounded-lg p-6 flex flex-col gap-4 group hover:shadow-[0_0_30px_rgba(189,147,249,0.15)] transition-all duration-500">
-              <div className="flex justify-between items-start">
-                <span className="font-label-sm text-xs text-tertiary px-3 py-1 rounded-full bg-white/5 border border-tertiary/30">Módulo 201</span>
-                <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">psychology</span>
-              </div>
-              <h3 className="font-headline-md text-2xl text-on-surface">Crecimiento Espiritual</h3>
-              <p className="font-body-md text-base text-on-surface-variant flex-grow">Desarrolla disciplinas que transformarán tu vida diaria y fortalecerán tu conexión divina.</p>
-              <div className="w-full bg-surface-container h-1 rounded-full mt-4 overflow-hidden">
-                <div className="bg-primary h-full w-[0%]"></div>
-              </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {cursos.length > 0 ? (
+                cursos.map((curso) => (
+                  <div key={curso.id} className="glass-card rounded-lg p-6 flex flex-col gap-4 group hover:shadow-[0_0_30px_rgba(189,147,249,0.15)] transition-all duration-500">
+                    <div className="flex justify-between items-start">
+                      <span className="font-label-sm text-xs text-tertiary px-3 py-1 rounded-full bg-white/5 border border-tertiary/30">Módulo {curso.nivel}</span>
+                      <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">
+                        {getIconForNivel(curso.nivel)}
+                      </span>
+                    </div>
+                    <h3 className="font-headline-md text-2xl text-on-surface">{curso.nombre}</h3>
+                    <p className="font-body-md text-base text-on-surface-variant flex-grow">{curso.descripcion || 'Sin descripción disponible.'}</p>
+                    <div className="w-full bg-surface-container h-1 rounded-full mt-4 overflow-hidden">
+                      <div className="bg-primary h-full" style={{ width: `${(parseInt(curso.nivel) / 501) * 100}%` }}></div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full text-center py-10 glass-card">
+                  <p className="text-on-surface-variant italic">No hay módulos disponibles en este momento.</p>
+                </div>
+              )}
             </div>
-            {/* Mod 301 */}
-            <div className="glass-card rounded-lg p-6 flex flex-col gap-4 group hover:shadow-[0_0_30px_rgba(189,147,249,0.15)] transition-all duration-500 md:col-span-2 lg:col-span-1">
-              <div className="flex justify-between items-start">
-                <span className="font-label-sm text-xs text-tertiary px-3 py-1 rounded-full bg-white/5 border border-tertiary/30">Módulo 301</span>
-                <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">groups</span>
-              </div>
-              <h3 className="font-headline-md text-2xl text-on-surface">Liderazgo y Servicio</h3>
-              <p className="font-body-md text-base text-on-surface-variant flex-grow">Aprende a guiar a otros con compasión, sabiduría y excelencia basada en principios bíblicos.</p>
-              <div className="w-full bg-surface-container h-1 rounded-full mt-4 overflow-hidden">
-                <div className="bg-primary h-full w-[0%]"></div>
-              </div>
-            </div>
-          </div>
+          )}
         </section>
 
         {/* CTA Section */}
@@ -242,9 +260,9 @@ const LandingPage = () => {
       {/* Footer */}
       <footer className="w-full bg-surface-container-lowest border-t border-glass-border py-20 px-4 md:px-16 flex flex-col md:flex-row justify-between items-start gap-6 mt-auto">
         <div className="flex flex-col gap-4">
-          <span className="font-headline-lg text-3xl text-on-surface">Escuela Bíblica</span>
+          <span className="font-headline-lg text-3xl text-on-surface">EBD Filadelfia</span>
           <p className="font-body-md text-base text-on-surface-variant max-w-md">
-            © 2024 Escuela Bíblica y Discipulado. Santuario Digital para el Aprendizaje Bíblico.
+            © 2024 Escuela Bíblica y Discipulado Filadelfia. Santuario Digital para el Aprendizaje Bíblico.
           </p>
         </div>
         <div className="flex flex-col gap-3">

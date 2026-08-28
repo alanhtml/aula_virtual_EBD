@@ -31,6 +31,14 @@ class CursoController extends Controller
         return response()->json($query->get());
     }
 
+    public function catalog()
+    {
+        // Retorna los cursos disponibles para el catálogo público
+        // Podemos agrupar por nivel o simplemente devolver los más recientes de cada nivel
+        $cursos = Curso::orderBy('nivel', 'asc')->get()->unique('nivel')->values();
+        return response()->json($cursos);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
