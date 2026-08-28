@@ -15,10 +15,16 @@ class SeccionController extends Controller
         $query = Seccion::query();
 
         if ($cursoId) {
-            $query->where('curso_id', $cursoId);
-        }
-
-        if ($masterId) {
+            $curso = \App\Models\Curso::find($cursoId);
+            if ($curso && $curso->modulo_master_id) {
+                $query->where(function($q) use ($cursoId, $curso) {
+                    $q->where('curso_id', $cursoId)
+                      ->orWhere('modulo_master_id', $curso->modulo_master_id);
+                });
+            } else {
+                $query->where('curso_id', $cursoId);
+            }
+        } elseif ($masterId) {
             $query->where('modulo_master_id', $masterId);
         }
 
