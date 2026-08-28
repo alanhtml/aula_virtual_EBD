@@ -16,4 +16,9 @@ class Periodo extends Model
         'fecha_fin',
         'activo',
     ];
+
+    public function cursos()
+    {
+        return $this->hasMany(Curso::class);
+    }
 }

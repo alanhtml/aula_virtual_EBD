@@ -12,7 +12,7 @@ class CursoController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $query = Curso::with(['docente', 'docentes', 'moduloMaster']);
+        $query = Curso::with(['docente', 'docentes', 'moduloMaster', 'periodo']);
 
         if ($user->role === 'docentes') {
             $query->where(function($q) use ($user) {
@@ -28,14 +28,11 @@ class CursoController extends Controller
         }
 
         // Director y Secretaria ven todos (no aplicamos filtro)
-
         return response()->json($query->get());
     }
 
     public function catalog()
     {
-        // Retorna los cursos disponibles para el catálogo público
-        // Podemos agrupar por nivel o simplemente devolver los más recientes de cada nivel
         $cursos = Curso::orderBy('nivel', 'asc')->get()->unique('nivel')->values();
         return response()->json($cursos);
     }
@@ -43,17 +40,18 @@ class CursoController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nombre' => 'required|string|max:255',
-            'nivel' => 'required|in:101,201,301,401,501',
-            'semestre' => 'required|string',
-            'horario' => 'required|string',
+            'nombre'      => 'required|string|max:255',
+            'nivel'       => 'required|in:101,201,301,401,501',
+            'semestre'    => 'nullable|string',
+            'horario'     => 'required|string',
             'descripcion' => 'nullable|string',
-            'codigo' => 'required|string|unique:cursos',
-            'docente_id' => 'nullable|exists:users,id',
+            'codigo'      => 'required|string|unique:cursos',
+            'docente_id'  => 'nullable|exists:users,id',
             'fecha_inicio' => 'nullable|date',
-            'fecha_fin' => 'nullable|date',
-            'docentes' => 'nullable|array',
-            'docentes.*' => 'exists:users,id',
+            'fecha_fin'   => 'nullable|date',
+            'docentes'    => 'nullable|array',
+            'docentes.*'  => 'exists:users,id',
+            'periodo_id'  => 'nullable|exists:periodos,id',
         ]);
 
         $curso = Curso::create($validated);
@@ -62,7 +60,7 @@ class CursoController extends Controller
             $curso->docentes()->sync($request->docentes);
         }
 
-        return response()->json($curso->load('docentes'), 201);
+        return response()->json($curso->load(['docentes', 'periodo']), 201);
     }
 
     public function show(Curso $curso)
@@ -71,17 +69,18 @@ class CursoController extends Controller
             'docente',
             'docentes',
             'estudiantes',
+            'periodo',
             'moduloMaster.secciones.materiales',
             'moduloMaster.secciones.tareas',
             'secciones.materiales',
-            'secciones.tareas'
+            'secciones.tareas',
         ]));
     }
 
     public function inscribirEstudiantes(Request $request, Curso $curso)
     {
         $validated = $request->validate([
-            'estudiantes' => 'required|array',
+            'estudiantes'   => 'required|array',
             'estudiantes.*' => 'exists:users,id',
         ]);
 
@@ -99,7 +98,7 @@ class CursoController extends Controller
             // Regla: Correlatividad
             $nivelActual = (int)$curso->nivel;
             if ($nivelActual > 101) {
-                $nivelesMap = [201 => '101', 301 => '201', 401 => '301', 501 => '401'];
+                $nivelesMap     = [201 => '101', 301 => '201', 401 => '301', 501 => '401'];
                 $nivelPrevioReq = $nivelesMap[$nivelActual];
 
                 $aprobadoPrevio = $user->cursos()
@@ -118,25 +117,26 @@ class CursoController extends Controller
         $curso->estudiantes()->sync($validated['estudiantes']);
 
         return response()->json([
-            'message' => 'Estudiantes inscritos correctamente',
-            'estudiantes' => $curso->estudiantes
+            'message'     => 'Estudiantes inscritos correctamente',
+            'estudiantes' => $curso->estudiantes,
         ]);
     }
 
     public function update(Request $request, Curso $curso)
     {
         $validated = $request->validate([
-            'nombre' => 'sometimes|required|string|max:255',
-            'nivel' => 'sometimes|required|in:101,201,301,401,501',
-            'semestre' => 'sometimes|required|string',
-            'horario' => 'sometimes|required|string',
+            'nombre'      => 'sometimes|required|string|max:255',
+            'nivel'       => 'sometimes|required|in:101,201,301,401,501',
+            'semestre'    => 'sometimes|nullable|string',
+            'horario'     => 'sometimes|required|string',
             'descripcion' => 'nullable|string',
-            'codigo' => 'sometimes|required|string|unique:cursos,codigo,' . $curso->id,
-            'docente_id' => 'nullable|exists:users,id',
+            'codigo'      => 'sometimes|required|string|unique:cursos,codigo,' . $curso->id,
+            'docente_id'  => 'nullable|exists:users,id',
             'fecha_inicio' => 'nullable|date',
-            'fecha_fin' => 'nullable|date',
-            'docentes' => 'nullable|array',
-            'docentes.*' => 'exists:users,id',
+            'fecha_fin'   => 'nullable|date',
+            'docentes'    => 'nullable|array',
+            'docentes.*'  => 'exists:users,id',
+            'periodo_id'  => 'nullable|exists:periodos,id',
         ]);
 
         $curso->update($validated);
@@ -145,7 +145,7 @@ class CursoController extends Controller
             $curso->docentes()->sync($request->docentes);
         }
 
-        return response()->json($curso->load('docentes'));
+        return response()->json($curso->load(['docentes', 'periodo']));
     }
 
     public function destroy(Curso $curso)
@@ -157,28 +157,27 @@ class CursoController extends Controller
     public function calificarEstudiante(Request $request, Curso $curso)
     {
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'nota_final' => 'required|numeric|min:0|max:100',
+            'user_id'          => 'required|exists:users,id',
+            'nota_final'       => 'required|numeric|min:0|max:100',
             'retroalimentacion' => 'nullable|string',
-            'estado' => 'required|in:cursando,aprobado,reprobado,inactivo,retirado',
+            'estado'           => 'required|in:cursando,aprobado,reprobado,inactivo,retirado',
         ]);
 
         $curso->estudiantes()->updateExistingPivot($validated['user_id'], [
-            'nota_final' => $validated['nota_final'],
+            'nota_final'        => $validated['nota_final'],
             'retroalimentacion' => $validated['retroalimentacion'],
-            'estado' => $validated['estado'],
+            'estado'            => $validated['estado'],
         ]);
 
         $estudiante = \App\Models\User::find($validated['user_id']);
 
         // Lógica de Promoción Automática: Si aprueba con >= 61, sube su nivel_actual
         if ($validated['estado'] === 'aprobado' && $validated['nota_final'] >= 61) {
-            $niveles = ['101', '201', '301', '401', '501'];
+            $niveles  = ['101', '201', '301', '401', '501'];
             $posActual = array_search($curso->nivel, $niveles);
 
             if ($posActual !== false && isset($niveles[$posActual + 1])) {
                 $siguienteNivel = $niveles[$posActual + 1];
-                // Solo subimos el nivel si el siguiente es mayor al que ya tiene
                 if ((int)$siguienteNivel > (int)$estudiante->nivel_actual) {
                     $estudiante->update(['nivel_actual' => $siguienteNivel]);
                 }
@@ -186,9 +185,9 @@ class CursoController extends Controller
         }
 
         return response()->json([
-            'message' => 'Calificación registrada y nivel actualizado si corresponde',
-            'estudiante' => $curso->estudiantes()->where('users.id', $validated['user_id'])->first(),
-            'nivel_actual_alumno' => $estudiante->nivel_actual
+            'message'            => 'Calificación registrada y nivel actualizado si corresponde',
+            'estudiante'         => $curso->estudiantes()->where('users.id', $validated['user_id'])->first(),
+            'nivel_actual_alumno' => $estudiante->nivel_actual,
         ]);
     }
 
@@ -199,8 +198,7 @@ class CursoController extends Controller
             return response()->json(['message' => 'Solo estudiantes pueden ver su historial'], 403);
         }
 
-        $historial = $user->cursos()->with(['docente', 'docentes'])->get();
-
+        $historial = $user->cursos()->with(['docente', 'docentes', 'periodo'])->get();
         return response()->json($historial);
     }
 
@@ -218,18 +216,18 @@ class CursoController extends Controller
             ->get()
             ->map(function($estudiante) {
                 return [
-                    'nombre' => $estudiante->name,
-                    'ci' => $estudiante->ci,
-                    'email' => $estudiante->email,
+                    'nombre'   => $estudiante->name,
+                    'ci'       => $estudiante->ci,
+                    'email'    => $estudiante->email,
                     'telefono' => $estudiante->telefono,
-                    'cursos' => $estudiante->cursos->map(function($c) {
+                    'cursos'   => $estudiante->cursos->map(function($c) {
                         return [
                             'modulo' => $c->nombre,
                             'codigo' => $c->codigo,
-                            'nota' => $c->pivot->nota_final,
-                            'estado' => $c->pivot->estado
+                            'nota'   => $c->pivot->nota_final,
+                            'estado' => $c->pivot->estado,
                         ];
-                    })
+                    }),
                 ];
             });
 
@@ -240,57 +238,71 @@ class CursoController extends Controller
     {
         $validated = $request->validate([
             'periodo' => 'required|in:PI,PII,PIII',
-            'año' => 'required|integer|min:2024|max:2099',
+            'año'     => 'required|integer|min:2024|max:2099',
         ]);
 
-        $periodo = $validated['periodo'];
-        $año = $validated['año'];
+        $periodoNombre = $validated['periodo'];
+        $año           = $validated['año'];
+
+        // 1. Buscar o crear el registro de Periodo (el ciclo lectivo)
+        $periodoObj = Periodo::firstOrCreate(
+            ['nombre' => $periodoNombre, 'año' => $año],
+            [
+                'activo'       => true,
+                'fecha_inicio' => null,
+                'fecha_fin'    => null,
+            ]
+        );
+
         $niveles = ['101', '201', '301', '401', '501'];
         $nombres = [
             '101' => 'Fundamentos de la Fe',
             '201' => 'Historia del Cristianismo',
             '301' => 'Hermenéutica Bíblica',
             '401' => 'Teología Sistemática',
-            '501' => 'Liderazgo y Misiones'
+            '501' => 'Liderazgo y Misiones',
         ];
 
         $cursosCreados = [];
 
-        $periodoObj = Periodo::where('nombre', $periodo)->where('año', $año)->first();
-        $semestreText = $periodo === 'PI' ? 'Primer Semestre' : ($periodo === 'PII' ? 'Segundo Semestre' : 'Semestre Intensivo');
-
         foreach ($niveles as $nivel) {
-            $codigo = "{$nivel}-{$periodo}-{$año}";
+            // Código legible, pero el filtrado real ya usa periodo_id (no el texto)
+            $codigo = "{$nivel}-{$periodoNombre}-{$año}";
 
-            // 1. Asegurar que exista el Módulo Maestro (El Molde)
+            // 2. Asegurar que exista el Módulo Maestro (El Molde permanente)
             $master = ModuloMaster::firstOrCreate(
                 ['nivel' => $nivel],
                 [
-                    'nombre' => $nombres[$nivel],
-                    'descripcion' => "Contenido maestro para el Módulo {$nivel}."
+                    'nombre'      => $nombres[$nivel],
+                    'descripcion' => "Contenido maestro para el Módulo {$nivel}.",
                 ]
             );
 
-            // 2. Crear la Instancia de Cursada vinculada al Maestro
+            // 3. Crear la Instancia de Cursada vinculada al Maestro Y al Periodo por FK
+            //    Unicidad: mismo ModuloMaster + mismo Periodo → nunca duplicar
             $curso = Curso::firstOrCreate(
-                ['codigo' => $codigo],
+                ['modulo_master_id' => $master->id, 'periodo_id' => $periodoObj->id],
                 [
-                    'nombre' => $nombres[$nivel],
-                    'nivel' => $nivel,
-                    'semestre' => $semestreText,
-                    'horario' => 'Domingos 08:00 - 12:00',
-                    'descripcion' => "Módulo {$nivel} correspondiente al periodo {$periodo} del año {$año}.",
-                    'fecha_inicio' => $periodoObj ? $periodoObj->fecha_inicio : null,
-                    'fecha_fin' => $periodoObj ? $periodoObj->fecha_fin : null,
-                    'modulo_master_id' => $master->id
+                    'nombre'           => $nombres[$nivel],
+                    'nivel'            => $nivel,
+                    'semestre'         => "{$periodoNombre} - {$año}",
+                    'horario'          => 'Domingos 08:00 - 12:00',
+                    'descripcion'      => "Instancia del Módulo {$nivel} para el periodo {$periodoNombre} {$año}.",
+                    'codigo'           => $codigo,
+                    'fecha_inicio'     => $periodoObj->fecha_inicio,
+                    'fecha_fin'        => $periodoObj->fecha_fin,
+                    'modulo_master_id' => $master->id,
+                    'periodo_id'       => $periodoObj->id,
                 ]
             );
-            $cursosCreados[] = $curso;
+
+            $cursosCreados[] = $curso->load('periodo');
         }
 
         return response()->json([
-            'message' => 'Apertura masiva completada con éxito vinculada a Módulos Maestros',
-            'cursos' => $cursosCreados
+            'message' => 'Apertura masiva completada. Módulos vinculados al periodo por FK.',
+            'periodo' => $periodoObj,
+            'cursos'  => $cursosCreados,
         ]);
     }
 }

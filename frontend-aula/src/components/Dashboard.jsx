@@ -38,10 +38,10 @@ const Dashboard = () => {
   const [userTab, setUserTab] = useState('estudiantes'); // 'personal' o 'estudiantes'
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [periodos, setPeriodos] = useState([]);
-  const [periodoActivo, setPeriodoActivo] = useState(null); // El periodo detectado por fecha
+  const [periodoActivo, setPeriodoActivo] = useState(null);
   const [cursoFilter, setCursoFilter] = useState({
-    periodo: 'ALL',
-    año: new Date().getFullYear().toString()
+    periodoId: null, // null = todos los periodos
+    label: 'Todos los Periodos'
   });
 
   // State para confirmaciones con diseño
@@ -94,10 +94,10 @@ const Dashboard = () => {
         setPeriodos(todos);
         if (activo) {
           setPeriodoActivo(activo);
-          // Pre-seleccionar el filtro al periodo vigente
+          // Pre-seleccionar el filtro al periodo vigente usando su ID
           setCursoFilter({
-            periodo: activo.nombre,
-            año: activo.año.toString()
+            periodoId: activo.id,
+            label: `${activo.nombre} - ${activo.año}`
           });
         }
       } catch (err) {
@@ -738,42 +738,43 @@ const Dashboard = () => {
                   <div>
                     <h2 className="text-3xl font-headline-lg text-on-surface">Gestión de Discipulado</h2>
                     <p className="text-sm text-on-surface-variant text-primary/70 font-bold uppercase tracking-widest mt-1">
-                      {user.role === 'docentes' ? 'Mis Módulos Asignados' : `${cursoFilter.periodo} - ${cursoFilter.año}`}
+                      {user.role === 'docentes'
+                        ? 'Mis Módulos Asignados'
+                        : cursoFilter.label
+                      }
                     </p>
                   </div>
 
                   {(user.role === 'director' || user.role === 'secretaria') && (
                     <div className="flex gap-2 flex-wrap">
                       {/* Badge del periodo detectado automáticamente */}
-                      {periodoActivo && cursoFilter.periodo === periodoActivo.nombre && cursoFilter.año === periodoActivo.año.toString() && (
-                        <span className="flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary border border-primary/30 rounded-full text-xs font-bold">
+                                          <div className="flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary border border-primary/30 rounded-full text-xs font-bold">
                           <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse inline-block"></span>
                           Ciclo Activo
                         </span>
                       )}
                       <select
-                        value={`${cursoFilter.periodo}|${cursoFilter.año}`}
+                        value={cursoFilter.periodoId ?? 'ALL'}
                         onChange={(e) => {
-                          const [p, a] = e.target.value.split('|');
-                          setCursoFilter({ periodo: p, año: a });
+                          const val = e.target.value;
+                          if (val === 'ALL') {
+                            setCursoFilter({ periodoId: null, label: 'Todos los Periodos' });
+                          } else {
+                            const p = periodos.find(p => p.id === parseInt(val));
+                            setCursoFilter({
+                              periodoId: p.id,
+                              label: `${p.nombre} - ${p.año}`
+                            });
+                          }
                         }}
                         className="glass-input px-4 py-2 rounded-xl text-xs font-bold border-primary/20"
                       >
-                        <option value="ALL|ALL">Todos los Periodos</option>
-                        {periodos.length > 0
-                          ? periodos.map(p => (
-                              <option key={p.id} value={`${p.nombre}|${p.año}`}>
-                                {p.nombre} - {p.año}{periodoActivo && p.id === periodoActivo.id ? ' ✦ Activo' : ''}
-                              </option>
-                            ))
-                          : (
-                            <>
-                              <option value="PI|2026">Periodo I - 2026</option>
-                              <option value="PII|2026">Periodo II - 2026</option>
-                              <option value="PIII|2026">Periodo III - 2026</option>
-                            </>
-                          )
-                        }
+                        <option value="ALL">Todos los Periodos</option>
+                        {periodos.map(p => (
+                          <option key={p.id} value={p.id}>
+                            {p.nombre} - {p.año}{periodoActivo && p.id === periodoActivo.id ? ' ✦ Activo' : ''}
+                          </option>
+                        ))}
                       </select>
                       <button
                         onClick={openPeriodoModal}
@@ -800,11 +801,9 @@ const Dashboard = () => {
                       {cursos
                         .filter(c => {
                           if (user.role === 'director' || user.role === 'secretaria') {
-                            if (cursoFilter.periodo === 'ALL') return true;
-                            // Soporta formato: 101-PI-2026 o PI-101-2026 o MOD-101-2024
-                            const periodoStr = cursoFilter.periodo;
-                            const añoStr = cursoFilter.año;
-                            return c.codigo.includes(periodoStr) && (añoStr === 'ALL' || c.codigo.includes(añoStr));
+                            // Filtro exacto por ID de periodo — sin string matching
+                            if (cursoFilter.periodoId === null) return true;
+                            return c.periodo_id === cursoFilter.periodoId;
                           }
                           return true;
                         })
@@ -847,10 +846,8 @@ const Dashboard = () => {
 
                     {cursos.length > 0 && (user.role === 'director' || user.role === 'secretaria') && (
                       cursos.filter(c => {
-                        if (cursoFilter.periodo === 'ALL') return true;
-                        const periodoStr = cursoFilter.periodo;
-                        const añoStr = cursoFilter.año;
-                        return c.codigo.includes(periodoStr) && (añoStr === 'ALL' || c.codigo.includes(añoStr));
+                        if (cursoFilter.periodoId === null) return true;
+                        return c.periodo_id === cursoFilter.periodoId;
                       }).length === 0
                     ) && (
                       <div className="py-20 flex flex-col items-center justify-center text-on-surface-variant/40 bg-glass-fill rounded-3xl border border-glass-border border-dashed w-full col-span-full">

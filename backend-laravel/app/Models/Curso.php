@@ -20,7 +20,13 @@ class Curso extends Model
         'fecha_inicio',
         'fecha_fin',
         'modulo_master_id',
+        'periodo_id',
     ];
+
+    public function periodo()
+    {
+        return $this->belongsTo(Periodo::class);
+    }
 
     public function moduloMaster()
     {
@@ -52,3 +58,4 @@ class Curso extends Model
         return $this->hasMany(Seccion::class)->orderBy('orden', 'asc');
     }
 }
+
