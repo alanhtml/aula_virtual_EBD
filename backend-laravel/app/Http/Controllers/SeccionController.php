@@ -10,10 +10,19 @@ class SeccionController extends Controller
     public function index(Request $request)
     {
         $cursoId = $request->query('curso_id');
+        $masterId = $request->query('modulo_master_id');
+
+        $query = Seccion::query();
+
         if ($cursoId) {
-            return response()->json(Seccion::where('curso_id', $cursoId)->orderBy('orden', 'asc')->get());
+            $query->where('curso_id', $cursoId);
         }
-        return response()->json(Seccion::all());
+
+        if ($masterId) {
+            $query->where('modulo_master_id', $masterId);
+        }
+
+        return response()->json($query->orderBy('orden', 'asc')->get());
     }
 
     public function store(Request $request)
@@ -21,9 +30,14 @@ class SeccionController extends Controller
         $validated = $request->validate([
             'titulo' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
-            'curso_id' => 'required|exists:cursos,id',
+            'curso_id' => 'nullable|exists:cursos,id',
+            'modulo_master_id' => 'nullable|exists:modulo_masters,id',
             'orden' => 'nullable|integer'
         ]);
+
+        if (!$request->curso_id && !$request->modulo_master_id) {
+            return response()->json(['message' => 'Debe proporcionar un curso_id o un modulo_master_id'], 422);
+        }
 
         $seccion = Seccion::create($validated);
         return response()->json($seccion, 201);

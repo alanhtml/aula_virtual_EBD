@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Curso;
 use App\Models\Periodo;
+use App\Models\ModuloMaster;
 use Illuminate\Http\Request;
 
 class CursoController extends Controller
@@ -11,7 +12,7 @@ class CursoController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $query = Curso::with(['docente', 'docentes']);
+        $query = Curso::with(['docente', 'docentes', 'moduloMaster']);
 
         if ($user->role === 'docentes') {
             $query->where(function($q) use ($user) {
@@ -66,7 +67,15 @@ class CursoController extends Controller
 
     public function show(Curso $curso)
     {
-        return response()->json($curso->load(['docente', 'docentes', 'estudiantes']));
+        return response()->json($curso->load([
+            'docente',
+            'docentes',
+            'estudiantes',
+            'moduloMaster.secciones.materiales',
+            'moduloMaster.secciones.tareas',
+            'secciones.materiales',
+            'secciones.tareas'
+        ]));
     }
 
     public function inscribirEstudiantes(Request $request, Curso $curso)
@@ -213,7 +222,7 @@ class CursoController extends Controller
     public function aperturaMasiva(Request $request)
     {
         $validated = $request->validate([
-            'periodo' => 'required|in:PI,PII,PIII',
+            'periodo' => 'required|in:PI,PII,PIIII',
             'año' => 'required|integer|min:2024|max:2099',
         ]);
 
@@ -231,14 +240,21 @@ class CursoController extends Controller
         $cursosCreados = [];
 
         $periodoObj = Periodo::where('nombre', $periodo)->where('año', $año)->first();
-        $semestreText = 'Primer Semestre';
-        if ($periodo === 'PII') $semestreText = 'Segundo Semestre';
-        if ($periodo === 'PIII') $semestreText = 'Semestre Intensivo';
+        $semestreText = $periodo === 'PI' ? 'Primer Semestre' : ($periodo === 'PII' ? 'Segundo Semestre' : 'Semestre Intensivo');
 
         foreach ($niveles as $nivel) {
             $codigo = "{$nivel}-{$periodo}-{$año}";
 
-            // Solo crear si no existe
+            // 1. Asegurar que exista el Módulo Maestro (El Molde)
+            $master = ModuloMaster::firstOrCreate(
+                ['nivel' => $nivel],
+                [
+                    'nombre' => $nombres[$nivel],
+                    'descripcion' => "Contenido maestro para el Módulo {$nivel}."
+                ]
+            );
+
+            // 2. Crear la Instancia de Cursada vinculada al Maestro
             $curso = Curso::firstOrCreate(
                 ['codigo' => $codigo],
                 [
@@ -249,13 +265,14 @@ class CursoController extends Controller
                     'descripcion' => "Módulo {$nivel} correspondiente al periodo {$periodo} del año {$año}.",
                     'fecha_inicio' => $periodoObj ? $periodoObj->fecha_inicio : null,
                     'fecha_fin' => $periodoObj ? $periodoObj->fecha_fin : null,
+                    'modulo_master_id' => $master->id
                 ]
             );
             $cursosCreados[] = $curso;
         }
 
         return response()->json([
-            'message' => 'Apertura masiva completada con éxito',
+            'message' => 'Apertura masiva completada con éxito vinculada a Módulos Maestros',
             'cursos' => $cursosCreados
         ]);
     }

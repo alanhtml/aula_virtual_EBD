@@ -19,7 +19,13 @@ class Curso extends Model
         'docente_id',
         'fecha_inicio',
         'fecha_fin',
+        'modulo_master_id',
     ];
+
+    public function moduloMaster()
+    {
+        return $this->belongsTo(ModuloMaster::class);
+    }
 
     public function docentes()
     {

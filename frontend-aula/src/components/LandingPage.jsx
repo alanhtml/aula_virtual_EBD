@@ -262,7 +262,7 @@ const LandingPage = () => {
         <div className="flex flex-col gap-4">
           <span className="font-headline-lg text-3xl text-on-surface">EBD Filadelfia</span>
           <p className="font-body-md text-base text-on-surface-variant max-w-md">
-            © 2024 Escuela Bíblica y Discipulado Filadelfia. Santuario Digital para el Aprendizaje Bíblico.
+            © {new Date().getFullYear()} Escuela Bíblica y Discipulado Filadelfia. Santuario Digital para el Aprendizaje Bíblico.
           </p>
         </div>
         <div className="flex flex-col gap-3">

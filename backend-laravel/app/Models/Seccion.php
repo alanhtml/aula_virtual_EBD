@@ -9,11 +9,16 @@ class Seccion extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['titulo', 'descripcion', 'orden', 'curso_id'];
+    protected $fillable = ['titulo', 'descripcion', 'orden', 'curso_id', 'modulo_master_id'];
 
     public function curso()
     {
         return $this->belongsTo(Curso::class);
+    }
+
+    public function moduloMaster()
+    {
+        return $this->belongsTo(ModuloMaster::class);
     }
 
     public function materiales()

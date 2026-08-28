@@ -16,11 +16,17 @@ class Material extends Model
         'url',
         'curso_id',
         'seccion_id',
+        'modulo_master_id',
     ];
 
     public function curso()
     {
         return $this->belongsTo(Curso::class);
+    }
+
+    public function moduloMaster()
+    {
+        return $this->belongsTo(ModuloMaster::class);
     }
 
     public function seccion()

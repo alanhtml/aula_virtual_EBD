@@ -11,10 +11,19 @@ class MaterialController extends Controller
     public function index(Request $request)
     {
         $cursoId = $request->query('curso_id');
+        $masterId = $request->query('modulo_master_id');
+
+        $query = Material::query();
+
         if ($cursoId) {
-            return response()->json(Material::where('curso_id', $cursoId)->get());
+            $query->where('curso_id', $cursoId);
         }
-        return response()->json(Material::all());
+
+        if ($masterId) {
+            $query->where('modulo_master_id', $masterId);
+        }
+
+        return response()->json($query->get());
     }
 
     public function store(Request $request)
@@ -23,13 +32,18 @@ class MaterialController extends Controller
             'titulo' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
             'tipo' => 'required|in:pdf,video,enlace,imagen,otro',
-            'curso_id' => 'required|exists:cursos,id',
+            'curso_id' => 'nullable|exists:cursos,id',
+            'modulo_master_id' => 'nullable|exists:modulo_masters,id',
             'seccion_id' => 'nullable|exists:seccions,id',
             'archivo' => 'required_if:tipo,pdf,otro,imagen|file|max:10240', // Max 10MB
             'url' => 'required_if:tipo,video,enlace|string',
         ]);
 
-        $data = $request->only(['titulo', 'descripcion', 'tipo', 'curso_id', 'seccion_id']);
+        if (!$request->curso_id && !$request->modulo_master_id) {
+            return response()->json(['message' => 'Debe proporcionar un curso_id o un modulo_master_id'], 422);
+        }
+
+        $data = $request->only(['titulo', 'descripcion', 'tipo', 'curso_id', 'modulo_master_id', 'seccion_id']);
 
         if ($request->hasFile('archivo')) {
             $path = $request->file('archivo')->store('materiales', 'public');

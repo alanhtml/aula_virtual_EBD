@@ -15,11 +15,17 @@ class Tarea extends Model
         'puntos',
         'curso_id',
         'seccion_id',
+        'modulo_master_id',
     ];
 
     public function curso(): BelongsTo
     {
         return $this->belongsTo(Curso::class);
+    }
+
+    public function moduloMaster(): BelongsTo
+    {
+        return $this->belongsTo(ModuloMaster::class);
     }
 
     public function seccion(): BelongsTo
