@@ -7,6 +7,7 @@ class User {
   final String? fechaNacimiento;
   final String? ci;
   final String? telefono;
+  final String? nivelActual;
 
   User({
     required this.id,
@@ -17,6 +18,7 @@ class User {
     this.fechaNacimiento,
     this.ci,
     this.telefono,
+    this.nivelActual,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class User {
       fechaNacimiento: json['fecha_nacimiento'],
       ci: json['ci'],
       telefono: json['telefono'],
+      nivelActual: json['nivel_actual']?.toString(),
     );
   }
 
@@ -42,6 +45,7 @@ class User {
       'fecha_nacimiento': fechaNacimiento,
       'ci': ci,
       'telefono': telefono,
+      'nivel_actual': nivelActual,
     };
   }
 }

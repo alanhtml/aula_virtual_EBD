@@ -15,16 +15,23 @@ class AuthController extends Controller
         $request->validate([
             'username' => 'required|string',
             'password' => 'required|string',
-            'role' => 'required|string|in:estudiantes,docentes,secretaria,director',
+            'role' => 'nullable|string|in:estudiantes,docentes,secretaria,director',
         ]);
 
-        $user = User::where('username', $request->username)
-                    ->where('role', $request->role)
-                    ->first();
+        $query = User::where(function($q) use ($request) {
+            $q->where('username', $request->username)
+              ->orWhere('email', $request->username);
+        });
+
+        if ($request->filled('role')) {
+            $query->where('role', $request->role);
+        }
+
+        $user = $query->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
-                'username' => ['Las credenciales proporcionadas son incorrectas para el perfil seleccionado.'],
+                'username' => ['Las credenciales proporcionadas son incorrectas.'],
             ]);
         }
 
@@ -32,6 +39,7 @@ class AuthController extends Controller
 
         return response()->json([
             'access_token' => $token,
+            'token' => $token,
             'token_type' => 'Bearer',
             'user' => $user
         ]);
