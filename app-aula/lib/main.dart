@@ -7,6 +7,7 @@ import 'providers/asistencia_provider.dart';
 import 'providers/material_provider.dart';
 import 'providers/foro_provider.dart';
 import 'screens/teacher_dashboard_screen.dart';
+import 'screens/dashboard_screen.dart';
 
 void main() {
   runApp(
@@ -145,25 +146,4 @@ class LoginScreen extends StatelessWidget {
   }
 }
 
-// Dashboard de Alumno (Placeholder)
-class StudentDashboard extends StatelessWidget {
-  const StudentDashboard({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    final user = Provider.of<UserProvider>(context).user;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Hola, ${user?.name}"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => Provider.of<UserProvider>(context, listen: false).logout(),
-          )
-        ],
-      ),
-      body: const Center(child: Text("Bienvenido a tu Escuela Bíblica móvil")),
-    );
-  }
-}

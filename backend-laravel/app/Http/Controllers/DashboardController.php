@@ -67,7 +67,15 @@ class DashboardController extends Controller
         }
 
         try {
+            // Obtener info de disco
+            $path = base_path();
+            $totalSpace = disk_total_space($path);
+            $freeSpace = disk_free_space($path);
+            $usedSpace = $totalSpace - $freeSpace;
+            $diskPercentage = ($totalSpace > 0) ? round(($usedSpace / $totalSpace) * 100, 1) : 0;
+
             return response()->json([
+                'debug_version' => '1.1', // Campo para verificar actualización
                 'php_version' => PHP_VERSION,
                 'laravel_version' => app()->version(),
                 'server_os' => PHP_OS,
@@ -75,7 +83,10 @@ class DashboardController extends Controller
                 'database_driver' => DB::connection()->getDriverName(),
                 'environment' => config('app.env'),
                 'uptime' => 'Activo',
-                'limit_warning' => 'Límite: 512MB RAM'
+                'limit_warning' => 'Límite: 512MB RAM',
+                'disk_usage' => $this->formatBytes($usedSpace),
+                'disk_total' => $this->formatBytes($totalSpace),
+                'disk_percentage' => $diskPercentage
             ]);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Error al obtener info del servidor'], 500);

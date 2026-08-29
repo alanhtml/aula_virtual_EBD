@@ -12,6 +12,7 @@ const ServerStats = () => {
   const fetchServerInfo = async () => {
     try {
       const response = await api.get('/dashboard/server-info');
+      console.log("Datos del Servidor:", response.data); // Depuración
       setServerInfo(response.data);
     } catch (error) {
       console.error('Error fetching server info:', error);
@@ -50,6 +51,14 @@ const ServerStats = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Almacenamiento primero para que sea imposible no verlo */}
+        <StatItem
+          label="Almacenamiento"
+          value={serverInfo.disk_usage || 'Calculando...'}
+          icon="storage"
+          subValue={serverInfo.disk_total ? `Total: ${serverInfo.disk_total} (${serverInfo.disk_percentage}%)` : 'Obteniendo límite...'}
+          color="text-primary"
+        />
         <StatItem label="SO Servidor" value={serverInfo.server_os} icon="terminal" />
         <StatItem label="PHP Version" value={serverInfo.php_version} icon="php" />
         <StatItem label="Laravel" value={serverInfo.laravel_version} icon="rocket" />
@@ -63,16 +72,13 @@ const ServerStats = () => {
         <StatItem label="Base de Datos" value={serverInfo.database_driver} icon="database" />
         <StatItem label="Entorno" value={serverInfo.environment} icon="cloud" />
         <StatItem label="Uptime" value={serverInfo.uptime} icon="timer" color="text-secondary-fixed" />
-        <StatItem label="Conectividad" value="Óptima" icon="wifi" color="text-primary" />
       </div>
 
       <div className="mt-8 p-4 rounded-xl bg-void-black/40 border border-glass-border flex items-start gap-4">
         <span className="material-symbols-outlined text-primary">info</span>
         <p className="text-xs text-on-surface-variant leading-relaxed">
             Estás operando en un entorno de <span className="text-primary font-bold">{serverInfo.environment.toUpperCase()}</span>.
-            El uso de memoria actual es de <span className="text-primary font-bold">{serverInfo.memory_usage}</span>.
-            Recuerda que el plan gratuito de Render tiene un límite de <span className="font-bold">512MB RAM</span>.
-            Si el uso excede este límite, el servidor podría reiniciarse automáticamente.
+            Recuerda que si el uso de recursos excede los límites del plan, el servidor podría reiniciarse.
         </p>
       </div>
     </div>
