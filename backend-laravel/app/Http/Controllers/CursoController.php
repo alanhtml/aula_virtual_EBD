@@ -12,90 +12,22 @@ class CursoController extends Controller
     public function index()
     {
         $user = auth()->user();
-
-        // 1. Detección y Enlace Automático al Periodo Activo por Fecha
-        $hoy = \Carbon\Carbon::today();
-        $periodoActivo = Periodo::where('fecha_inicio', '<=', $hoy)
-            ->where('fecha_fin', '>=', $hoy)
-            ->first();
-
-        // 2. Si hay un periodo activo según el calendario, auto-enlazar y asegurar los 5 módulos base
-        if ($periodoActivo) {
-            $niveles = ['101', '201', '301', '401', '501'];
-            $nombres = [
-                '101' => 'Fundamentos de la Fe',
-                '201' => 'Historia del Cristianismo',
-                '301' => 'Hermenéutica Bíblica',
-                '401' => 'Teología Sistemática',
-                '501' => 'Liderazgo y Misiones',
-            ];
-
-            foreach ($niveles as $nivel) {
-                // Asegurar molde maestro permanente
-                $master = ModuloMaster::firstOrCreate(
-                    ['nivel' => $nivel],
-                    [
-                        'nombre' => $nombres[$nivel],
-                        'descripcion' => "Contenido maestro para el Módulo {$nivel}."
-                    ]
-                );
-
-                // Comprobar si ya existe cursada para este periodo activo
-                $cursoExistente = Curso::where('modulo_master_id', $master->id)
-                    ->where('periodo_id', $periodoActivo->id)
-                    ->first();
-
-                if (!$cursoExistente) {
-                    // Si hay un curso de este nivel con periodo null, asignarlo al periodo activo
-                    $cursoSinPeriodo = Curso::where('nivel', $nivel)
-                        ->whereNull('periodo_id')
-                        ->first();
-
-                    if ($cursoSinPeriodo) {
-                        $cursoSinPeriodo->update([
-                            'periodo_id' => $periodoActivo->id,
-                            'modulo_master_id' => $master->id,
-                            'semestre' => "{$periodoActivo->nombre} - {$periodoActivo->año}",
-                            'codigo' => "{$nivel}-{$periodoActivo->nombre}-{$periodoActivo->año}"
-                        ]);
-                    } else {
-                        // Crear la cursada vinculada automáticamente al periodo activo
-                        Curso::firstOrCreate(
-                            ['modulo_master_id' => $master->id, 'periodo_id' => $periodoActivo->id],
-                            [
-                                'nombre' => $nombres[$nivel],
-                                'nivel' => $nivel,
-                                'semestre' => "{$periodoActivo->nombre} - {$periodoActivo->año}",
-                                'horario' => 'Domingos 08:00 - 12:00',
-                                'descripcion' => "Instancia del Módulo {$nivel} para el periodo {$periodoActivo->nombre} {$periodoActivo->año}.",
-                                'codigo' => "{$nivel}-{$periodoActivo->nombre}-{$periodoActivo->año}",
-                                'fecha_inicio' => $periodoActivo->fecha_inicio,
-                                'fecha_fin' => $periodoActivo->fecha_fin,
-                                'modulo_master_id' => $master->id,
-                                'periodo_id' => $periodoActivo->id,
-                            ]
-                        );
-                    }
-                }
-            }
-        }
-
         $query = Curso::with(['docente', 'docentes', 'moduloMaster', 'periodo']);
 
-        if ($user->role === 'docentes') {
+        if ($user && $user->role === 'docentes') {
             $query->where(function($q) use ($user) {
                 $q->where('docente_id', $user->id)
                   ->orWhereHas('docentes', function($sq) use ($user) {
                       $sq->where('users.id', $user->id);
                   });
             });
-        } elseif ($user->role === 'estudiantes') {
+        } elseif ($user && $user->role === 'estudiantes') {
             $query->whereHas('estudiantes', function($q) use ($user) {
                 $q->where('users.id', $user->id);
             });
         }
 
-        // Director y Secretaria ven todos (no aplicamos filtro)
+        // Director y Secretaria ven todos
         return response()->json($query->get());
     }
 
