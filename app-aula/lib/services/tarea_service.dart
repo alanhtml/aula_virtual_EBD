@@ -20,10 +20,21 @@ class TareaService {
     }
   }
 
-  Future<bool> enviarTarea(Entrega entrega) async {
+  Future<bool> enviarTarea(Entrega entrega, {String? filePath}) async {
     try {
-      final response = await _dio.post('/entregas', data: entrega.toJson());
-      return response.statusCode == 201 || response.statusCode == 200;
+      if (filePath != null) {
+        FormData formData = FormData.fromMap({
+          'tarea_id': entrega.tareaId,
+          'user_id': entrega.userId,
+          'comentario_estudiante': entrega.comentarioEstudiante,
+          'archivo': await MultipartFile.fromFile(filePath),
+        });
+        final response = await _dio.post('/entregas', data: formData);
+        return response.statusCode == 201 || response.statusCode == 200;
+      } else {
+        final response = await _dio.post('/entregas', data: entrega.toJson());
+        return response.statusCode == 201 || response.statusCode == 200;
+      }
     } catch (e) {
       print("Error enviando tarea: $e");
       return false;

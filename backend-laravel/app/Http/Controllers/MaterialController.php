@@ -52,8 +52,48 @@ class MaterialController extends Controller
         $data = $request->only(['titulo', 'descripcion', 'tipo', 'curso_id', 'modulo_master_id', 'seccion_id']);
 
         if ($request->hasFile('archivo')) {
-            $path = $request->file('archivo')->store('materiales', 'public');
-            $data['url'] = Storage::url($path);
+            $file = $request->file('archivo');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '_' . uniqid() . '.' . $extension;
+
+            // Si es imagen, comprimir con GD
+            if (str_starts_with($file->getMimeType(), 'image/') && in_array(strtolower($extension), ['jpg', 'jpeg', 'png'])) {
+                $image = null;
+                if (strtolower($extension) === 'png') {
+                    $image = @imagecreatefrompng($file->getRealPath());
+                } else {
+                    $image = @imagecreatefromjpeg($file->getRealPath());
+                }
+
+                if ($image) {
+                    $width = imagesx($image);
+                    $height = imagesy($image);
+                    $maxSize = 1200;
+
+                    if ($width > $maxSize) {
+                        $newWidth = $maxSize;
+                        $newHeight = ($height / $width) * $maxSize;
+                        $tmp = imagecreatetruecolor($newWidth, $newHeight);
+                        // Mantener transparencia si es necesario, o convertir a JPG para ahorrar más espacio
+                        imagecopyresampled($tmp, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                        $image = $tmp;
+                    }
+
+                    ob_start();
+                    imagejpeg($image, null, 75); // Convertir a JPG 75% calidad para máximo ahorro
+                    $content = ob_get_clean();
+                    $filename = pathinfo($filename, PATHINFO_FILENAME) . '.jpg';
+                    Storage::disk('public')->put('materiales/' . $filename, $content);
+                    $data['url'] = Storage::url('materiales/' . $filename);
+                    imagedestroy($image);
+                } else {
+                    $path = $file->storeAs('materiales', $filename, 'public');
+                    $data['url'] = Storage::url($path);
+                }
+            } else {
+                $path = $file->storeAs('materiales', $filename, 'public');
+                $data['url'] = Storage::url($path);
+            }
         } else {
             $data['url'] = $request->input('url');
         }

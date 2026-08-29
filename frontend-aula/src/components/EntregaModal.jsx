@@ -8,17 +8,51 @@ const EntregaModal = ({ isOpen, onClose, onSave, tarea }) => {
 
   if (!isOpen || !tarea) return null;
 
-  const handleSubmit = (e) => {
+  const compressImage = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (e) => {
+        const img = new Image();
+        img.src = e.target.result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 1200;
+          let width = img.width;
+          let height = img.height;
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob((blob) => {
+            resolve(new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: 'image/jpeg' }));
+          }, 'image/jpeg', 0.7);
+        };
+      };
+    });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.archivo) {
         alert("Por favor, selecciona un archivo.");
         return;
     }
 
+    let archivoFinal = formData.archivo;
+    // Si es una imagen, comprimirla
+    if (formData.archivo.type.startsWith('image/')) {
+      archivoFinal = await compressImage(formData.archivo);
+    }
+
     const data = new FormData();
     data.append('tarea_id', tarea.id);
     data.append('comentario_estudiante', formData.comentario_estudiante);
-    data.append('archivo', formData.archivo);
+    data.append('archivo', archivoFinal);
 
     onSave(data);
   };

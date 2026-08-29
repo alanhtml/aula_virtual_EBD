@@ -46,7 +46,47 @@ class EntregaController extends Controller
             // Por simplicidad en este paso, solo guardamos el nuevo
         }
 
-        $path = $request->file('archivo')->store('entregas', 'public');
+        $path = '';
+        $file = $request->file('archivo');
+        $extension = $file->getClientOriginalExtension();
+        $filename = time() . '_' . uniqid() . '.' . $extension;
+
+        // Si es imagen, comprimir con GD
+        if (str_starts_with($file->getMimeType(), 'image/') && in_array(strtolower($extension), ['jpg', 'jpeg', 'png'])) {
+            $image = null;
+            if (strtolower($extension) === 'png') {
+                $image = @imagecreatefrompng($file->getRealPath());
+            } else {
+                $image = @imagecreatefromjpeg($file->getRealPath());
+            }
+
+            if ($image) {
+                $width = imagesx($image);
+                $height = imagesy($image);
+                $maxSize = 1000; // Un poco más pequeño para entregas de alumnos
+
+                if ($width > $maxSize) {
+                    $newWidth = $maxSize;
+                    $newHeight = ($height / $width) * $maxSize;
+                    $tmp = imagecreatetruecolor($newWidth, $newHeight);
+                    imagecopyresampled($tmp, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                    $image = $tmp;
+                }
+
+                ob_start();
+                imagejpeg($image, null, 65); // 65% calidad para alumnos (ahorro máximo)
+                $content = ob_get_clean();
+                $filename = pathinfo($filename, PATHINFO_FILENAME) . '.jpg';
+                \Illuminate\Support\Facades\Storage::disk('public')->put('entregas/' . $filename, $content);
+                $path = 'entregas/' . $filename;
+                imagedestroy($image);
+            } else {
+                $path = $file->storeAs('entregas', $filename, 'public');
+            }
+        } else {
+            $path = $file->storeAs('entregas', $filename, 'public');
+        }
+
         $archivoUrl = asset('storage/' . $path);
 
         $entrega = Entrega::updateOrCreate(

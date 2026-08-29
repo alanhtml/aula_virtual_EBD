@@ -22,9 +22,42 @@ const MaterialModal = ({ isOpen, onClose, cursoId, secciones = [] }) => {
     }
   };
 
+  const compressImage = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (e) => {
+        const img = new Image();
+        img.src = e.target.result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 1200;
+          let width = img.width;
+          let height = img.height;
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob((blob) => {
+            resolve(new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: 'image/jpeg' }));
+          }, 'image/jpeg', 0.7);
+        };
+      };
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+
+    let archivoFinal = formData.archivo;
+    if (formData.tipo === 'imagen' && archivoFinal) {
+      archivoFinal = await compressImage(archivoFinal);
+    }
 
     const data = new FormData();
     data.append('titulo', formData.titulo);
@@ -36,12 +69,12 @@ const MaterialModal = ({ isOpen, onClose, cursoId, secciones = [] }) => {
     }
 
     if (formData.tipo === 'pdf' || formData.tipo === 'otro' || formData.tipo === 'imagen') {
-      if (!formData.archivo) {
+      if (!archivoFinal) {
         toast.error('Por favor selecciona un archivo');
         setLoading(false);
         return;
       }
-      data.append('archivo', formData.archivo);
+      data.append('archivo', archivoFinal);
     } else {
       data.append('url', formData.url);
     }

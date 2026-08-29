@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 import '../models/curso.dart';
 import '../models/tarea.dart';
 import '../models/entrega.dart';
@@ -27,54 +31,124 @@ class _StudentTareasScreenState extends State<StudentTareasScreen> {
     final commentController = TextEditingController();
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final tareaProvider = Provider.of<TareaProvider>(context, listen: false);
-    
+    File? selectedFile;
+    String? fileName;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Entregar: ${tarea.titulo}"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text("En esta versión puedes enviar un comentario como entrega."),
-            const SizedBox(height: 16),
-            TextField(
-              controller: commentController,
-              decoration: const InputDecoration(
-                labelText: "Tu respuesta o comentario",
-                border: OutlineInputBorder(),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text("Entregar: ${tarea.titulo}"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("Selecciona tu archivo de tarea (PDF o Imagen)."),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.attach_file),
+                label: Text(fileName ?? "Seleccionar Archivo"),
+                onPressed: () async {
+                  FilePickerResult? result = await FilePicker.platform.pickFiles(
+                    type: FileType.custom,
+                    allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+                  );
+
+                  if (result != null) {
+                    setState(() {
+                      selectedFile = File(result.files.single.path!);
+                      fileName = result.files.single.name;
+                    });
+                  }
+                },
               ),
-              maxLines: 3,
+              if (fileName != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    "Archivo: $fileName",
+                    style: const TextStyle(fontSize: 12, color: Colors.green, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: commentController,
+                decoration: const InputDecoration(
+                  labelText: "Comentario adicional",
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 2,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancelar")),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
+              onPressed: () async {
+                if (selectedFile == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Por favor selecciona un archivo")),
+                  );
+                  return;
+                }
+
+                final user = userProvider.user;
+                if (user == null) return;
+
+                final entrega = Entrega(
+                  tareaId: tarea.id!,
+                  userId: user.id,
+                  comentarioEstudiante: commentController.text,
+                );
+
+                // Mostrar indicador de carga
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (context) => const Center(child: CircularProgressIndicator()),
+                );
+
+                String finalPath = selectedFile!.path;
+                
+                // Si es imagen, comprimir antes de enviar
+                if (fileName!.toLowerCase().endsWith('.jpg') || 
+                    fileName!.toLowerCase().endsWith('.jpeg') || 
+                    fileName!.toLowerCase().endsWith('.png')) {
+                  final tempDir = await getTemporaryDirectory();
+                  final targetPath = "${tempDir.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg";
+                  
+                  final compressedFile = await FlutterImageCompress.compressAndGetFile(
+                    selectedFile!.path,
+                    targetPath,
+                    quality: 70,
+                    minWidth: 1200,
+                    minHeight: 1200,
+                  );
+                  
+                  if (compressedFile != null) {
+                    finalPath = compressedFile.path;
+                  }
+                }
+
+                final success = await tareaProvider.entregarTarea(entrega, filePath: finalPath);
+
+                Navigator.pop(context); // Cerrar loading
+                Navigator.pop(context); // Cerrar dialogo entrega
+
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Tarea entregada correctamente")),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Error al entregar la tarea")),
+                  );
+                }
+              },
+              child: const Text("Subir y Entregar"),
             ),
           ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancelar")),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
-            onPressed: () async {
-              if (userProvider.user == null) return;
-              
-              final entrega = Entrega(
-                tareaId: tarea.id,
-                userId: userProvider.user!.id,
-                comentarioEstudiante: commentController.text,
-              );
-
-              final success = await tareaProvider.entregarTarea(entrega);
-              
-              if (context.mounted) {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(success ? "Tarea entregada con éxito" : "Error al enviar la tarea"),
-                    backgroundColor: success ? Colors.green : Colors.red,
-                  ),
-                );
-              }
-            },
-            child: const Text("Enviar Entrega"),
-          ),
-        ],
       ),
     );
   }

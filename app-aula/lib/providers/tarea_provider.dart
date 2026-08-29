@@ -75,8 +75,8 @@ class TareaProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> entregarTarea(Entrega entrega) async {
-    final success = await _tareaService.enviarTarea(entrega);
+  Future<bool> entregarTarea(Entrega entrega, {String? filePath}) async {
+    final success = await _tareaService.enviarTarea(entrega, filePath: filePath);
     if (success) {
       notifyListeners();
     }
